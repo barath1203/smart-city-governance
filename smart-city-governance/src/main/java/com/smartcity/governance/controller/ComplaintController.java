@@ -57,4 +57,21 @@ public class ComplaintController {
 
         return complaintRepository.save(complaint);
     }
+    
+    @PutMapping("/assign/{complaintId}")
+    public Complaint assignComplaint(
+            @PathVariable Long complaintId,
+            @RequestParam String department,
+            @RequestParam Long officerId) {
+
+        Complaint complaint = complaintRepository.findById(complaintId).orElseThrow();
+        User officer = userRepository.findById(officerId).orElseThrow();
+
+        complaint.setDepartment(department);
+        complaint.setAssignedOfficer(officer);
+        complaint.setStatus("IN_PROGRESS");
+
+        return complaintRepository.save(complaint);
+    }
+
 }

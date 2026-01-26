@@ -18,6 +18,10 @@ public class User {
     private String password;
 
     private String role; // CITIZEN, OFFICER, ADMIN
+    
+    private String department; 
+ // WATER, ELECTRICITY, ROAD, SANITATION
+
 
     // Constructors
     public User() {}
@@ -69,4 +73,13 @@ public class User {
     public void setRole(String role) {
         this.role = role;
     }
+    
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
 }

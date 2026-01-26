@@ -28,6 +28,12 @@ public class Complaint {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+    
+    private String department;
+
+    @ManyToOne
+    @JoinColumn(name = "assigned_officer_id")
+    private User assignedOfficer;
 
     // Constructors
     public Complaint() {
@@ -95,4 +101,21 @@ public class Complaint {
     public void setUser(User user) {
         this.user = user;
     }
+    
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public User getAssignedOfficer() {
+        return assignedOfficer;
+    }
+
+    public void setAssignedOfficer(User assignedOfficer) {
+        this.assignedOfficer = assignedOfficer;
+    }
+
 }
