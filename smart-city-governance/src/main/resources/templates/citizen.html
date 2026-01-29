@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Citizen Dashboard</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+
+<h2>Citizen Dashboard</h2>
+
+<!-- Raise Complaint -->
+<h3>Raise Complaint</h3>
+<form action="/api/complaints/create/1" method="post">
+    <input type="text" name="title" placeholder="Title" required><br><br>
+    <textarea name="description" placeholder="Description"></textarea><br><br>
+    <input type="text" name="latitude" placeholder="Latitude"><br><br>
+    <input type="text" name="longitude" placeholder="Longitude"><br><br>
+    <button type="submit">Submit Complaint</button>
+</form>
+
+<hr>
+
+<!-- View Notifications -->
+<h3>Notifications</h3>
+<a href="/api/notifications/CITIZEN">View Notifications</a>
+
+</body>
+</html>

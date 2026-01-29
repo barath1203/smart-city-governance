@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+
+<h2>Admin Dashboard</h2>
+
+<h3>Analytics</h3>
+<a href="/api/admin/dashboard">View Dashboard Stats</a>
+
+<hr>
+
+<h3>Assign Complaint to Officer</h3>
+<form action="/api/complaints/assign/1" method="post">
+    <input type="text" name="department" placeholder="Department"><br><br>
+    <input type="text" name="officerId" placeholder="Officer ID"><br><br>
+    <button type="submit">Assign</button>
+</form>
+
+<hr>
+
+<h3>Send Emergency Alert</h3>
+<form action="/api/notifications/create" method="post">
+    <input type="text" name="message" placeholder="Alert message">
+    <input type="hidden" name="role" value="ALL">
+    <button type="submit">Send Alert</button>
+</form>
+
+</body>
+</html>

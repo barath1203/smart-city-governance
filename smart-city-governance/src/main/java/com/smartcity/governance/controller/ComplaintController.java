@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartcity.governance.model.Complaint;
+import com.smartcity.governance.model.Notification;
 import com.smartcity.governance.model.User;
 import com.smartcity.governance.repository.ComplaintRepository;
+import com.smartcity.governance.repository.NotificationRepository;
 import com.smartcity.governance.repository.UserRepository;
 
 @RestController
@@ -17,6 +19,10 @@ public class ComplaintController {
 
     @Autowired
     private ComplaintRepository complaintRepository;
+    
+    @Autowired
+    private NotificationRepository notificationRepository;
+
 
     @Autowired
     private UserRepository userRepository;
@@ -54,6 +60,14 @@ public class ComplaintController {
 
         Complaint complaint = complaintRepository.findById(complaintId).orElseThrow();
         complaint.setStatus(status);
+        
+        Notification n = new Notification();
+        n.setMessage("Your complaint ID " + complaintId + 
+                     " status changed to " + status);
+        n.setRole("CITIZEN");
+
+        notificationRepository.save(n);
+
 
         return complaintRepository.save(complaint);
     }

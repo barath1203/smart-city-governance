@@ -20,6 +20,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/complaints/user/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/update-status/**").hasAnyRole("OFFICER", "ADMIN")
                 .requestMatchers("/api/complaints/all").hasAnyRole("OFFICER", "ADMIN")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

@@ -6,6 +6,10 @@ import com.smartcity.governance.model.Complaint;
 import com.smartcity.governance.model.User;
 
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
+	
+	long countByStatus(String status);
+
+	long countByDepartment(String department);
 
     List<Complaint> findByUser(User user);
 
