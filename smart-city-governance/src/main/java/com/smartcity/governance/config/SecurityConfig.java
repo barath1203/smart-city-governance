@@ -15,7 +15,9 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
+
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()   // 👈 allow login/register
                 .requestMatchers("/api/complaints/create/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/user/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/update-status/**").hasAnyRole("OFFICER", "ADMIN")
@@ -23,9 +25,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
-            .formLogin(form -> form
-                .permitAll()
-            )
+
+            // ❌ Disable Spring default login page
+            .formLogin(form -> form.disable())
+
+            // optional
             .logout(logout -> logout.permitAll());
 
         return http.build();
