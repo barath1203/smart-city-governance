@@ -10,11 +10,16 @@ import org.springframework.web.bind.annotation.*;
 
 import com.smartcity.governance.model.User;
 import com.smartcity.governance.repository.UserRepository;
+import com.smartcity.governance.security.JwtService;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin
 public class AuthController {
+	
+	@Autowired
+	private JwtService jwtService;
+
 
     @Autowired
     private UserRepository userRepository;
@@ -25,18 +30,26 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user) {
 
-    	User dbUser = userRepository.findByEmail(user.getEmail());
+        User dbUser = userRepository.findByEmail(user.getEmail());
 
-    	if (dbUser == null ||
-    	    !passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) {
-    	    return ResponseEntity.status(401).body("Invalid credentials");
-    	}
+        if (dbUser == null ||
+            !passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) {
+            return ResponseEntity.status(401).body("Invalid credentials");
+        }
 
+        // 🔐 Generate JWT Token
+        String token = jwtService.generateToken(
+                dbUser.getEmail(),
+                dbUser.getRole()
+        );
 
+        // 📦 Send token + user details
         Map<String, String> response = new HashMap<>();
+        response.put("token", token);
         response.put("role", dbUser.getRole());
         response.put("name", dbUser.getName());
 
         return ResponseEntity.ok(response);
     }
+
 }
