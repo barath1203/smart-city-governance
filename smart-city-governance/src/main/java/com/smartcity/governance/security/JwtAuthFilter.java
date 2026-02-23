@@ -41,6 +41,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String email = jwtService.extractEmail(token);
             String role = jwtService.extractRole(token);
 
+            System.out.println("=== JWT DEBUG ===");
+            System.out.println("Email: " + email);
+            System.out.println("Role: " + role);
+            System.out.println("Authority: ROLE_" + role);
+            
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             email,

@@ -26,9 +26,15 @@ public class RegisterController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
 
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            return ResponseEntity.badRequest().body("Email already exists");
+        }
+
+        user.setRole("CITIZEN");
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
         userRepository.save(user);
 
-        return ResponseEntity.ok("User registered successfully");
+        return ResponseEntity.ok("Citizen registered successfully");
     }
 }

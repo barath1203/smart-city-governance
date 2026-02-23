@@ -5,10 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import com.smartcity.governance.model.Complaint;
+import com.smartcity.governance.model.User;
 import com.smartcity.governance.repository.ComplaintRepository;
+import com.smartcity.governance.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -16,6 +20,12 @@ public class AdminController {
 
     @Autowired
     private ComplaintRepository complaintRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // 🔹 Dashboard Analytics
     @GetMapping("/dashboard")
@@ -35,7 +45,7 @@ public class AdminController {
 
         return stats;
     }
-    @GetMapping("/complaints")
+    @GetMapping("/all")
     public List<Complaint> getAllComplaints() {
         return complaintRepository.findAll();
     }
@@ -57,7 +67,7 @@ public class AdminController {
         return result;
     }
     
-    @GetMapping("/admin/count-by-department")
+    @GetMapping("/count-by-department")
     public Map<String, Long> countByDepartment() {
 
         Map<String, Long> result = new HashMap<>();
@@ -69,5 +79,19 @@ public class AdminController {
 
         return result;
     }
+    
+    @PostMapping("/add-officer")
+    public ResponseEntity<?> addOfficer(@RequestBody User user) {
 
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            return ResponseEntity.badRequest().body("Email already exists");
+        }
+
+        user.setRole("OFFICER");
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Officer added successfully");
+    }
 }
