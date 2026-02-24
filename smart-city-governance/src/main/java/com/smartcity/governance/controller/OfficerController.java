@@ -7,13 +7,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import com.smartcity.governance.model.Complaint;
-import com.smartcity.governance.model.User;
-import com.smartcity.governance.repository.ComplaintRepository;
-import com.smartcity.governance.repository.UserRepository;
+import com.smartcity.governance.model.*;
+import com.smartcity.governance.repository.*;
 
 @RestController
 @RequestMapping("/api/officer")
+@CrossOrigin(origins = "*")
 public class OfficerController {
 
     @Autowired
@@ -22,25 +21,21 @@ public class OfficerController {
     @Autowired
     private UserRepository userRepository;
 
-    // View complaints assigned to officer
-    @GetMapping("/complaints/{officerId}")
-    public List<Complaint> getAssignedComplaints(@PathVariable Long officerId) {
-        User officer = userRepository.findById(officerId).orElseThrow();
-        return complaintRepository.findByAssignedOfficer(officer);
-    }
-    
+    // 🔹 1. Get complaints assigned to logged-in officer
     @GetMapping("/complaints")
     public List<Complaint> getOfficerComplaints(Authentication authentication) {
 
         String email = authentication.getName();
         User officer = userRepository.findByEmail(email);
 
-        return complaintRepository.findByDepartment(officer.getDepartment());
+        // Return only complaints assigned to this officer
+        return complaintRepository.findByAssignedOfficer(officer);
     }
-    
+
+    // 🔹 2. Update Complaint Status (ENUM based)
     @PutMapping("/update-status/{id}")
     public ResponseEntity<?> updateStatus(@PathVariable Long id,
-                                          @RequestParam String status) {
+                                          @RequestParam ComplaintStatus status) {
 
         Complaint complaint = complaintRepository.findById(id).orElse(null);
 
@@ -51,8 +46,30 @@ public class OfficerController {
         complaint.setStatus(status);
         complaintRepository.save(complaint);
 
-        return ResponseEntity.ok("Status updated");
+        return ResponseEntity.ok("Status updated successfully");
     }
 
+    // 🔹 3. Filter by Status (Optional Advanced Feature)
+    @GetMapping("/complaints/status/{status}")
+    public List<Complaint> getByStatus(@PathVariable ComplaintStatus status,
+                                       Authentication authentication) {
 
+        String email = authentication.getName();
+        User officer = userRepository.findByEmail(email);
+
+        return complaintRepository
+                .findByAssignedOfficerAndStatus(officer, status);
+    }
+
+    // 🔹 4. Filter by Priority (Optional Advanced Feature)
+    @GetMapping("/complaints/priority/{priority}")
+    public List<Complaint> getByPriority(@PathVariable ComplaintPriority priority,
+                                         Authentication authentication) {
+
+        String email = authentication.getName();
+        User officer = userRepository.findByEmail(email);
+
+        return complaintRepository
+                .findByAssignedOfficerAndPriority(officer, priority);
+    }
 }

@@ -11,111 +11,156 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
 
-    @Column(length = 1000)
+    @Column(length = 1000, nullable = false)
     private String description;
 
+    @Column(nullable = false)
     private Double latitude;
+
+    @Column(nullable = false)
     private Double longitude;
 
-    private String status; 
-    // OPEN, IN_PROGRESS, RESOLVED
+    // ✅ Use ENUM instead of String
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ComplaintStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Department department;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ComplaintPriority priority;
+
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // 🔗 Many complaints → One user (Citizen)
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-    
-    private String department;
+    private LocalDateTime updatedAt;
 
-    @ManyToOne
+    // 🔗 Many complaints → One citizen
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    // 🔗 Many complaints → One officer (optional)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_officer_id")
     private User assignedOfficer;
 
-    // Constructors
-    public Complaint() {
-        this.createdAt = LocalDateTime.now();
-        this.status = "OPEN";
+    // ✅ Automatically set timestamps
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        status = ComplaintStatus.OPEN;
+        
+        if (priority == null) {
+            priority = ComplaintPriority.MEDIUM; // default
+        }
     }
 
-    // Getters & Setters
-    public Long getId() {
-        return id;
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public String getTitle() {
-        return title;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+	public String getTitle() {
+		return title;
+	}
 
-    public String getDescription() {
-        return description;
-    }
- 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	public void setTitle(String title) {
+		this.title = title;
+	}
 
-    public Double getLatitude() {
-        return latitude;
-    }
- 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
- 
-    public Double getLongitude() {
-        return longitude;
-    }
- 
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
- 
-    public String getStatus() {
-        return status;
-    }
- 
-    public void setStatus(String status) {
-        this.status = status;
-    }
+	public String getDescription() {
+		return description;
+	}
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    public User getUser() {
-        return user;
-    }
- 
-    public void setUser(User user) {
-        this.user = user;
-    }
-    
-    public String getDepartment() {
-        return department;
-    }
+	public Double getLatitude() {
+		return latitude;
+	}
 
-    public void setDepartment(String department) {
-        this.department = department;
-    }
+	public void setLatitude(Double latitude) {
+		this.latitude = latitude;
+	}
 
-    public User getAssignedOfficer() {
-        return assignedOfficer;
-    }
+	public Double getLongitude() {
+		return longitude;
+	}
 
-    public void setAssignedOfficer(User assignedOfficer) {
-        this.assignedOfficer = assignedOfficer;
-    }
+	public void setLongitude(Double longitude) {
+		this.longitude = longitude;
+	}
 
-}
+	public ComplaintStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(ComplaintStatus status) {
+		this.status = status;
+	}
+
+	public Department getDepartment() {
+		return department;
+	}
+
+	public void setDepartment(Department department) {
+		this.department = department;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public User getAssignedOfficer() {
+		return assignedOfficer;
+	}
+
+	public void setAssignedOfficer(User assignedOfficer) {
+		this.assignedOfficer = assignedOfficer;
+	}
+
+	public ComplaintPriority getPriority() {
+		return priority;
+	}
+
+	public void setPriority(ComplaintPriority priority) {
+		this.priority = priority;
+	}
+
+    }

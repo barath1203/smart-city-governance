@@ -19,7 +19,8 @@ public class User {
 
     private String role; // CITIZEN, OFFICER, ADMIN
     
-    private String department; 
+    @Enumerated(EnumType.STRING)
+    private Department department; 
  // WATER, ELECTRICITY, ROAD, SANITATION
 
 
@@ -73,13 +74,14 @@ public class User {
     public void setRole(String role) {
         this.role = role;
     }
+
+	public Department getDepartment() {
+		return department;
+	}
+
+	public void setDepartment(Department department) {
+		this.department = department;
+	}
     
-    public String getDepartment() {
-        return department;
-    }
-
-    public void setDepartment(String department) {
-        this.department = department;
-    }
-
+    
 }

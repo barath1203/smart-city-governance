@@ -1,16 +1,14 @@
 package com.smartcity.governance.controller;
 
+import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.smartcity.governance.model.Complaint;
-import com.smartcity.governance.model.Notification;
-import com.smartcity.governance.model.User;
-import com.smartcity.governance.repository.ComplaintRepository;
-import com.smartcity.governance.repository.NotificationRepository;
-import com.smartcity.governance.repository.UserRepository;
+import com.smartcity.governance.model.*;
+import com.smartcity.governance.repository.*;
 
 @RestController
 @RequestMapping("/api/complaints")
@@ -19,73 +17,96 @@ public class ComplaintController {
 
     @Autowired
     private ComplaintRepository complaintRepository;
-    
-    @Autowired
-    private NotificationRepository notificationRepository;
-
 
     @Autowired
     private UserRepository userRepository;
 
-    // 🔹 1. Raise a new complaint
-    @PostMapping("/create/{userId}")
-    public Complaint createComplaint(
-            @PathVariable Long userId,
-            @RequestBody Complaint complaint) {
+    @Autowired
+    private NotificationRepository notificationRepository;
 
-        User user = userRepository.findById(userId).orElseThrow();
-        complaint.setUser(user);
+    // 🔹 1. Create Complaint (Citizen - JWT Based)
+    @PostMapping("/create")
+    public Complaint createComplaint(@RequestBody Complaint complaint,
+                                     Principal principal) {
+
+        // ✅ Get logged-in citizen from JWT
+        User citizen = userRepository.findByEmail(principal.getName());
+        complaint.setUser(citizen);
+
+        // 🔥 Auto-Assign Officer Based on Department
+        Optional<User> officer = userRepository
+        	    .findFirstByRoleAndDepartment("OFFICER", complaint.getDepartment());
+
+        if (officer.isPresent()) {
+            complaint.setAssignedOfficer(officer.get());
+            complaint.setStatus(ComplaintStatus.IN_PROGRESS);
+        } else {
+            complaint.setStatus(ComplaintStatus.OPEN);
+        }
 
         return complaintRepository.save(complaint);
     }
 
-    // 🔹 2. Get all complaints (Admin / Officer)
+    // 🔹 2. Get All Complaints (Admin)
     @GetMapping("/all")
     public List<Complaint> getAllComplaints() {
         return complaintRepository.findAll();
     }
 
-    // 🔹 3. Get complaints by user (Citizen)
-    @GetMapping("/user/{userId}")
-    public List<Complaint> getComplaintsByUser(@PathVariable Long userId) {
-        User user = userRepository.findById(userId).orElseThrow();
-        return complaintRepository.findByUser(user);
+    // 🔹 3. Get Complaints of Logged-in Citizen
+    @GetMapping("/my")
+    public List<Complaint> getMyComplaints(Principal principal) {
+
+        User citizen = userRepository.findByEmail(principal.getName());
+        return complaintRepository.findByUser(citizen);
     }
 
-    // 🔹 4. Update complaint status (Officer/Admin)
+    // 🔹 4. Officer: Get Assigned Complaints
+    @GetMapping("/assigned")
+    public List<Complaint> getAssignedComplaints(Principal principal) {
+
+        User officer = userRepository.findByEmail(principal.getName());
+        return complaintRepository.findByAssignedOfficer(officer);
+    }
+
+    // 🔹 5. Update Complaint Status (Officer/Admin)
     @PutMapping("/update-status/{complaintId}")
-    public Complaint updateStatus(
-            @PathVariable Long complaintId,
-            @RequestParam String status) {
+    public Complaint updateStatus(@PathVariable Long complaintId,
+                                  @RequestParam ComplaintStatus status) {
 
-        Complaint complaint = complaintRepository.findById(complaintId).orElseThrow();
+        Complaint complaint = complaintRepository
+                .findById(complaintId)
+                .orElseThrow();
+
         complaint.setStatus(status);
-        
-        Notification n = new Notification();
-        n.setMessage("Your complaint ID " + complaintId + 
-                     " status changed to " + status);
-        n.setRole("CITIZEN");
 
-        notificationRepository.save(n);
+        // 🔔 Notify citizen
+        Notification notification = new Notification();
+        notification.setMessage("Your complaint ID " + complaintId +
+                " status changed to " + status);
+        notification.setRole("CITIZEN");
 
+        notificationRepository.save(notification);
 
         return complaintRepository.save(complaint);
     }
-    
+
+    // 🔹 6. Admin: Manual Assign Officer
     @PutMapping("/assign/{complaintId}")
-    public Complaint assignComplaint(
-            @PathVariable Long complaintId,
-            @RequestParam String department,
-            @RequestParam Long officerId) {
+    public Complaint assignComplaint(@PathVariable Long complaintId,
+                                     @RequestParam Long officerId) {
 
-        Complaint complaint = complaintRepository.findById(complaintId).orElseThrow();
-        User officer = userRepository.findById(officerId).orElseThrow();
+        Complaint complaint = complaintRepository
+                .findById(complaintId)
+                .orElseThrow();
 
-        complaint.setDepartment(department);
+        User officer = userRepository
+                .findById(officerId)
+                .orElseThrow();
+
         complaint.setAssignedOfficer(officer);
-        complaint.setStatus("IN_PROGRESS");
+        complaint.setStatus(ComplaintStatus.IN_PROGRESS);
 
         return complaintRepository.save(complaint);
     }
-
 }
