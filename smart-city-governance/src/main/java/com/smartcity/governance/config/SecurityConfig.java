@@ -30,7 +30,10 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/notifications/**").permitAll() // ✅ added
+                .requestMatchers("/api/notifications/**").permitAll()
+                .requestMatchers("/api/upload/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/api/officer/**").hasRole("OFFICER")    // ✅ added
                 .requestMatchers("/api/complaints/create/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/user/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/update-status/**").hasAnyRole("OFFICER", "ADMIN")
