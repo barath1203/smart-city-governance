@@ -1,4 +1,5 @@
 package com.smartcity.governance.repository;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import java.util.List;
@@ -12,6 +13,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     long countByStatus(ComplaintStatus status);
     long countByDepartment(Department department);
+    long countByPriority(ComplaintPriority priority); // ✅ added
 
     @Query("SELECT c FROM Complaint c WHERE c.user = :user")
     List<Complaint> findByUser(User user);
@@ -21,7 +23,5 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByAssignedOfficer(User officer);
     List<Complaint> findByAssignedOfficerAndStatus(User officer, ComplaintStatus status);
     List<Complaint> findByAssignedOfficerAndPriority(User officer, ComplaintPriority priority);
-
-    // ✅ NEW — returns all complaints sorted by priority (EMERGENCY first)
     List<Complaint> findAllByOrderByPriorityDesc();
 }
