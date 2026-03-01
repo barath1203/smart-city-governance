@@ -22,6 +22,9 @@ public class AdminController {
 
     @Autowired
     private NotificationRepository notificationRepository;
+    
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @GetMapping("/dashboard-stats")
     public ResponseEntity<Map<String, Object>> getDashboardStats() {
@@ -65,8 +68,7 @@ public class AdminController {
     }
 
     @PostMapping("/add-officer")
-    public ResponseEntity<?> addOfficer(@RequestBody User user,
-            org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
+    public ResponseEntity<?> addOfficer(@RequestBody User user) {
         if (userRepository.findByEmail(user.getEmail()) != null) {
             return ResponseEntity.badRequest().body("Email already exists");
         }
