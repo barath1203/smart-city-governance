@@ -22,7 +22,7 @@ public class AdminController {
 
     @Autowired
     private NotificationRepository notificationRepository;
-    
+
     @Autowired
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
@@ -38,6 +38,7 @@ public class AdminController {
         statusStats.put("OPEN",        complaintRepository.countByStatus(ComplaintStatus.OPEN));
         statusStats.put("IN_PROGRESS", complaintRepository.countByStatus(ComplaintStatus.IN_PROGRESS));
         statusStats.put("RESOLVED",    complaintRepository.countByStatus(ComplaintStatus.RESOLVED));
+        statusStats.put("ESCALATED",   complaintRepository.countByStatus(ComplaintStatus.ESCALATED)); // ✅ NEW
         stats.put("byStatus", statusStats);
 
         Map<String, Long> deptStats = new HashMap<>();
@@ -67,6 +68,13 @@ public class AdminController {
         return userRepository.findByRole("OFFICER");
     }
 
+    // ✅ Get all escalated complaints
+    @GetMapping("/escalated")
+    public ResponseEntity<List<Complaint>> getEscalatedComplaints() {
+        List<Complaint> escalated = complaintRepository.findByEscalatedTrue();
+        return ResponseEntity.ok(escalated);
+    }
+
     @PostMapping("/add-officer")
     public ResponseEntity<?> addOfficer(@RequestBody User user) {
         if (userRepository.findByEmail(user.getEmail()) != null) {
@@ -88,7 +96,16 @@ public class AdminController {
 
         complaint.setAssignedOfficer(officer);
         complaint.setStatus(ComplaintStatus.IN_PROGRESS);
+        complaint.setEscalated(false); // ✅ Reset escalation when manually reassigned
         complaintRepository.save(complaint);
+
+        // ✅ Notify officer
+        Notification notif = new Notification();
+        notif.setMessage("New complaint assigned to you: '" +
+                complaint.getTitle() + "' — Priority: " + complaint.getPriority());
+        notif.setRole("OFFICER");
+        notif.setCreatedAt(java.time.LocalDateTime.now());
+        notificationRepository.save(notif);
 
         return ResponseEntity.ok("Officer assigned successfully");
     }

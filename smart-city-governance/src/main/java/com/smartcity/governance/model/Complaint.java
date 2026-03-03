@@ -10,99 +10,91 @@ public class Complaint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String title;
-
-    @Column(length = 1000, nullable = false)
     private String description;
-
-    @Column(nullable = false)
+    private String location;
     private Double latitude;
-
-    @Column(nullable = false)
     private Double longitude;
+    private String imageUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    private ComplaintPriority priority;
+
+    @Enumerated(EnumType.STRING)
     private ComplaintStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Department department;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ComplaintPriority priority;
-
-    // ✅ NEW — image filename/URL
-    private String imageUrl;
-
-    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+    private LocalDateTime deadline;
+    private boolean escalated = false;
 
-    private LocalDateTime updatedAt;
+    // ✅ Rating fields
+    private Integer rating;
+    private String ratingComment;
+    private boolean rated = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "citizen_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "assigned_officer_id")
+    @ManyToOne
+    @JoinColumn(name = "officer_id")
     private User assignedOfficer;
 
     @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        status = ComplaintStatus.OPEN;
-        if (priority == null) {
-            priority = ComplaintPriority.MEDIUM;
-        }
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.status = ComplaintStatus.OPEN;
+        this.deadline = calculateDeadline(this.priority);
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    private LocalDateTime calculateDeadline(ComplaintPriority priority) {
+        if (priority == null) return LocalDateTime.now().plusDays(5);
+        return switch (priority) {
+            case LOW       -> LocalDateTime.now().plusDays(5);
+            case MEDIUM    -> LocalDateTime.now().plusDays(3);
+            case HIGH      -> LocalDateTime.now().plusDays(1);
+            case EMERGENCY -> LocalDateTime.now().plusHours(4);
+        };
     }
 
-    // ── Getters & Setters ──
-
+    // Getters and Setters
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
-
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
     public Double getLatitude() { return latitude; }
     public void setLatitude(Double latitude) { this.latitude = latitude; }
-
     public Double getLongitude() { return longitude; }
     public void setLongitude(Double longitude) { this.longitude = longitude; }
-
-    public ComplaintStatus getStatus() { return status; }
-    public void setStatus(ComplaintStatus status) { this.status = status; }
-
-    public Department getDepartment() { return department; }
-    public void setDepartment(Department department) { this.department = department; }
-
-    public ComplaintPriority getPriority() { return priority; }
-    public void setPriority(ComplaintPriority priority) { this.priority = priority; }
-
-    // ✅ NEW getter/setter
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
+    public ComplaintPriority getPriority() { return priority; }
+    public void setPriority(ComplaintPriority priority) { this.priority = priority; }
+    public ComplaintStatus getStatus() { return status; }
+    public void setStatus(ComplaintStatus status) { this.status = status; }
+    public Department getDepartment() { return department; }
+    public void setDepartment(Department department) { this.department = department; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-
+    public LocalDateTime getDeadline() { return deadline; }
+    public void setDeadline(LocalDateTime deadline) { this.deadline = deadline; }
+    public boolean isEscalated() { return escalated; }
+    public void setEscalated(boolean escalated) { this.escalated = escalated; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
-
     public User getAssignedOfficer() { return assignedOfficer; }
     public void setAssignedOfficer(User assignedOfficer) { this.assignedOfficer = assignedOfficer; }
+
+    // ✅ Rating getters and setters
+    public Integer getRating() { return rating; }
+    public void setRating(Integer rating) { this.rating = rating; }
+    public String getRatingComment() { return ratingComment; }
+    public void setRatingComment(String ratingComment) { this.ratingComment = ratingComment; }
+    public boolean isRated() { return rated; }
+    public void setRated(boolean rated) { this.rated = rated; }
 }

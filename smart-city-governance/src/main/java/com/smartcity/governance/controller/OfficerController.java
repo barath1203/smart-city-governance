@@ -1,4 +1,5 @@
 package com.smartcity.governance.controller;
+
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,7 @@ public class OfficerController {
     private UserRepository userRepository;
 
     @Autowired
-    private NotificationRepository notificationRepository; // ✅ added
+    private NotificationRepository notificationRepository;
 
     // 🔹 1. Get complaints assigned to logged-in officer
     @GetMapping("/complaints")
@@ -29,7 +30,7 @@ public class OfficerController {
         return complaintRepository.findByAssignedOfficer(officer);
     }
 
-    // 🔹 2. Update Complaint Status + Notify Citizen ✅
+    // 🔹 2. Update Complaint Status + Notify Citizen
     @PutMapping("/update-status/{id}")
     public ResponseEntity<?> updateStatus(
             @PathVariable Long id,
@@ -41,13 +42,19 @@ public class OfficerController {
         }
 
         complaint.setStatus(status);
+
+        // ✅ If officer resolves — reset escalation flag
+        if (status == ComplaintStatus.RESOLVED) {
+            complaint.setEscalated(false);
+        }
+
         complaintRepository.save(complaint);
 
-        // ✅ Notify citizen when status changes
         Notification notification = new Notification();
         notification.setMessage("Your complaint '" + complaint.getTitle() +
                 "' status has been updated to " + status);
         notification.setRole("CITIZEN");
+        notification.setCreatedAt(java.time.LocalDateTime.now());
         notificationRepository.save(notification);
 
         return ResponseEntity.ok("Status updated successfully");
