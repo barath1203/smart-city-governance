@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import com.smartcity.governance.model.*;
 import com.smartcity.governance.repository.*;
+import com.smartcity.governance.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/complaints")
@@ -24,6 +25,9 @@ public class ComplaintController {
 
     @Autowired
     private NotificationRepository notificationRepository;
+    
+    @Autowired
+    private NotificationService notificationService;  // ← ADD
 
     @PostMapping("/create")
     public ResponseEntity<?> createComplaint(
@@ -114,12 +118,21 @@ public class ComplaintController {
 
         complaintRepository.save(complaint);
 
+        // ✅ Save to DB
         Notification notif = new Notification();
         notif.setMessage("Your complaint '" + complaint.getTitle() +
                 "' status updated to " + status);
         notif.setRole("CITIZEN");
         notif.setCreatedAt(java.time.LocalDateTime.now());
         notificationRepository.save(notif);
+
+        // ⚡ WebSocket push
+        String citizenEmail = complaint.getUser().getEmail();
+        System.out.println("📡 Sending WebSocket to: " + citizenEmail);
+        notificationService.notifyUser(
+            citizenEmail,
+            "Your complaint '" + complaint.getTitle() + "' is now " + status
+        );
 
         return ResponseEntity.ok("Status updated to " + status);
     }
