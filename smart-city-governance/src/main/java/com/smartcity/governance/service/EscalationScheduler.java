@@ -5,6 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.smartcity.governance.model.Complaint;
+import com.smartcity.governance.model.ComplaintPriority;
 import com.smartcity.governance.model.ComplaintStatus;
 import com.smartcity.governance.model.Notification;
 import com.smartcity.governance.repository.ComplaintRepository;
@@ -15,47 +16,57 @@ import java.util.List;
 
 @Component
 public class EscalationScheduler {
-
     @Autowired
     private ComplaintRepository complaintRepository;
-
     @Autowired
     private NotificationRepository notificationRepository;
 
-    // ✅ Runs every 30 minutes
     @Scheduled(fixedRate = 1800000)
     public void escalateOverdueComplaints() {
         List<Complaint> overdue = complaintRepository.findOverdueComplaints(LocalDateTime.now());
 
         for (Complaint complaint : overdue) {
+            // 1. Escalate priority one step higher
+            complaint.setPriority(escalatePriority(complaint.getPriority()));
 
-            // 1. Change status to ESCALATED
+            // 2. Change status
             complaint.setStatus(ComplaintStatus.ESCALATED);
             complaint.setEscalated(true);
             complaintRepository.save(complaint);
 
-            // 2. Notify ADMIN
-            Notification adminNotif = new Notification();
-            adminNotif.setRole("ADMIN");
-            adminNotif.setMessage(
+            // 3. Notify DEPARTMENT_HEAD instead of ADMIN
+            Notification dhNotif = new Notification();
+            dhNotif.setRole("DEPARTMENT_HEAD");
+            dhNotif.setMessage(
                 "🚨 ESCALATED: Complaint #" + complaint.getId() +
-                " '" + complaint.getTitle() + "' has exceeded its deadline. " +
-                "Priority: " + complaint.getPriority()
+                " '" + complaint.getTitle() + "' has exceeded its deadline." +
+                " Department: " + complaint.getDepartment() +
+                " | New Priority: " + complaint.getPriority()
             );
-            adminNotif.setCreatedAt(LocalDateTime.now());
-            notificationRepository.save(adminNotif);
+            dhNotif.setCreatedAt(LocalDateTime.now());
+            notificationRepository.save(dhNotif);
 
-            // 3. Notify CITIZEN
+            // 4. Notify CITIZEN
             Notification citizenNotif = new Notification();
             citizenNotif.setRole("CITIZEN");
             citizenNotif.setMessage(
                 "⚠️ Your complaint '" + complaint.getTitle() +
-                "' has been escalated to higher authority for faster resolution."
+                "' has been escalated for faster resolution." +
+                " Priority raised to: " + complaint.getPriority()
             );
             citizenNotif.setCreatedAt(LocalDateTime.now());
             notificationRepository.save(citizenNotif);
         }
 
         System.out.println("✅ Escalation check done. Escalated: " + overdue.size() + " complaints.");
+    }
+
+    private ComplaintPriority escalatePriority(ComplaintPriority current) {
+        return switch (current) {
+            case LOW       -> ComplaintPriority.MEDIUM;
+            case MEDIUM    -> ComplaintPriority.HIGH;
+            case HIGH      -> ComplaintPriority.EMERGENCY;
+            case EMERGENCY -> ComplaintPriority.EMERGENCY;
+        };
     }
 }

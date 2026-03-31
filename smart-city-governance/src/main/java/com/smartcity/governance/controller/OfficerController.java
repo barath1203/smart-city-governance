@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import com.smartcity.governance.model.*;
 import com.smartcity.governance.repository.*;
 import com.smartcity.governance.service.NotificationService;
+import com.smartcity.governance.service.PerformanceService;
 
 @RestController
 @RequestMapping("/api/officer")
@@ -25,6 +26,12 @@ public class OfficerController {
 
 	@Autowired
 	private NotificationService notificationService;
+	
+	@Autowired
+	private PerformanceService performanceService;
+	
+	@Autowired
+	private CoordinationRequestRepository coordinationRequestRepository;
 
 	// 🔹 1. Get complaints assigned to logged-in officer
 	@GetMapping("/complaints")
@@ -38,15 +45,22 @@ public class OfficerController {
 
 	@PutMapping("/update-status/{id}")
 	public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestParam ComplaintStatus status) {
+
 	    Complaint complaint = complaintRepository.findById(id).orElse(null);
 	    if (complaint == null) {
 	        return ResponseEntity.notFound().build();
 	    }
 
 	    complaint.setStatus(status);
+
 	    if (status == ComplaintStatus.RESOLVED) {
 	        complaint.setEscalated(false);
+	        complaint.setResolvedAt(java.time.LocalDateTime.now());
+
+	        // 🔥🔥🔥 MOST IMPORTANT LINE
+	        performanceService.recalculateScore(complaint.getAssignedOfficer());
 	    }
+
 	    complaintRepository.save(complaint);
 
 	    Notification notification = new Notification();
@@ -55,14 +69,11 @@ public class OfficerController {
 	    notification.setCreatedAt(java.time.LocalDateTime.now());
 	    notificationRepository.save(notification);
 
-	    // ⚡ WebSocket
 	    String citizenEmail = complaint.getUser().getEmail();
-	    System.out.println("📡 Sending WebSocket to: " + citizenEmail);  // ← ADD THIS
 	    notificationService.notifyUser(
 	        citizenEmail,
 	        "Your complaint '" + complaint.getTitle() + "' is now " + status
 	    );
-	    System.out.println("📡 WebSocket sent!");  // ← AND THIS
 
 	    return ResponseEntity.ok("Status updated successfully");
 	}
@@ -81,5 +92,34 @@ public class OfficerController {
 		String email = authentication.getName();
 		User officer = userRepository.findByEmail(email);
 		return complaintRepository.findByAssignedOfficerAndPriority(officer, priority);
+	}
+	
+	@GetMapping("/performance")
+	public int getPerformance(Authentication auth) {
+	    User officer = userRepository.findByEmail(auth.getName());
+	    return officer.getPerformanceScore();
+	}
+	
+	@PostMapping("/request-coordination/{complaintId}")
+	public ResponseEntity<?> requestCoordination(
+	        @PathVariable Long complaintId,
+	        @RequestParam Department department,
+	        @RequestParam String reason,
+	        Authentication auth) {
+
+	    User officer = userRepository.findByEmail(auth.getName());
+	    Complaint complaint = complaintRepository.findById(complaintId).orElseThrow();
+
+	    CoordinationRequest req = new CoordinationRequest();
+	    req.setComplaint(complaint);
+	    req.setRequestedBy(officer);
+	    req.setRequestedDepartment(department);
+	    req.setReason(reason);
+	    req.setStatus(RequestStatus.PENDING);
+
+	    coordinationRequestRepository.save(req);
+	    System.out.println("🔥 Coordination API HIT");
+
+	    return ResponseEntity.ok("Request sent to admin");
 	}
 }

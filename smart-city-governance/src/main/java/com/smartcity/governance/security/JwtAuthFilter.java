@@ -38,7 +38,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String email = jwtService.extractEmail(token);
             String role  = jwtService.extractRole(token);
 
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (email != null 
+            	    && jwtService.isTokenValid(token)
+            	    && SecurityContextHolder.getContext().getAuthentication() == null)  {
 
                 // ✅ CRITICAL — Spring Security needs ROLE_ prefix
                 String springRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;

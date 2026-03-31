@@ -32,4 +32,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     // ✅ Rating queries
     List<Complaint> findByRatedTrue();
     List<Complaint> findByAssignedOfficerAndRatedTrue(User officer);
+    List<Complaint> findByDepartment(Department department);
+    
+    List<Complaint> findByDepartmentAndEscalatedTrue(Department department);
 }

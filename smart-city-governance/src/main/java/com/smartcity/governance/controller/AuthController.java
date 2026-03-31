@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import com.smartcity.governance.model.Role;
 import com.smartcity.governance.model.User;
 import com.smartcity.governance.repository.UserRepository;
 import com.smartcity.governance.security.JwtService;
@@ -27,7 +29,7 @@ public class AuthController {
         if (userRepository.findByEmail(user.getEmail()) != null) {
             return ResponseEntity.badRequest().body("Email already exists");
         }
-        user.setRole("CITIZEN");
+        user.setRole(Role.CITIZEN);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return ResponseEntity.ok("Registration successful");
@@ -43,13 +45,15 @@ public class AuthController {
         }
         String token = jwtService.generateToken(
                 dbUser.getEmail(),
-                dbUser.getRole()
+                dbUser.getRole().name(),
+                dbUser.getDepartment() != null ? dbUser.getDepartment().name() : ""
         );
-        Map<String, String> response = new HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         response.put("token", token);
-        response.put("role", dbUser.getRole());
+        response.put("role", dbUser.getRole().name());
         response.put("name", dbUser.getName());
         response.put("email", dbUser.getEmail());
+        response.put("id", dbUser.getId());
         return ResponseEntity.ok(response);
     }
 }
