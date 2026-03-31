@@ -148,6 +148,7 @@ public class AdminController {
         );
 
         if (officer != null) {
+
             // ✅ Create assignment
             CoordinationAssignment assignment = new CoordinationAssignment();
             assignment.setComplaint(complaint);
@@ -158,7 +159,7 @@ public class AdminController {
             // 🔔 Notify assisting officer
             Notification n1 = new Notification();
             n1.setMessage("You are assigned to assist complaint: " + complaint.getTitle());
-            n1.setRole("OFFICER");
+            n1.setUser(officer);   // ✅ FIX
             n1.setCreatedAt(LocalDateTime.now());
             notificationRepository.save(n1);
 
@@ -168,14 +169,17 @@ public class AdminController {
             Notification n2 = new Notification();
             n2.setMessage("Your coordination request approved. Officer "
                     + officer.getName() + " is assisting.");
-            n2.setRole("OFFICER");
+            n2.setUser(req.getRequestedBy());   // ✅ FIX
             n2.setCreatedAt(LocalDateTime.now());
             notificationRepository.save(n2);
 
-            notificationService.notifyUser(req.getRequestedBy().getEmail(), n2.getMessage());
+            notificationService.notifyUser(
+                    req.getRequestedBy().getEmail(),
+                    n2.getMessage()
+            );
 
         } else {
-            req.setCoordinationOfficerPending(true); // fallback
+            req.setCoordinationOfficerPending(true);
         }
 
         // ✅ Update departments
@@ -185,13 +189,13 @@ public class AdminController {
         // 🔔 Notify citizen
         Notification n3 = new Notification();
         n3.setMessage("Additional department assigned for faster resolution");
-        n3.setRole("CITIZEN");
+        n3.setUser(complaint.getUser());   // ✅ FIX
         n3.setCreatedAt(LocalDateTime.now());
         notificationRepository.save(n3);
 
         notificationService.notifyUser(
-            complaint.getUser().getEmail(),
-            n3.getMessage()
+                complaint.getUser().getEmail(),
+                n3.getMessage()
         );
 
         req.setStatus(RequestStatus.APPROVED);
