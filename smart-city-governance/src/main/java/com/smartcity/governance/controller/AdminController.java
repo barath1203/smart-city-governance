@@ -119,16 +119,23 @@ public class AdminController {
     }
     
     @PostMapping("/create-dh")
-    public User createDepartmentHead(@RequestBody User user) {
+    public ResponseEntity<?> createDepartmentHead(@RequestBody User user) {
 
-        user.setRole(Role.DEPARTMENT_HEAD);
+        // ✅ Check duplicate email
+        if (userRepository.findByEmail(user.getEmail()) != null) {
+            return ResponseEntity.badRequest().body("Email already exists");
+        }
 
         // ✅ Must assign department
         if (user.getDepartment() == null) {
-            throw new RuntimeException("Department is required for DH");
+            return ResponseEntity.badRequest().body("Department is required for DH");
         }
 
-        return userRepository.save(user);
+        user.setRole(Role.DEPARTMENT_HEAD);
+        user.setPassword(passwordEncoder.encode(user.getPassword())); // ✅ Encode password
+
+        userRepository.save(user);
+        return ResponseEntity.ok("Department head added successfully");
     }
     
     @GetMapping("/coordination-requests")

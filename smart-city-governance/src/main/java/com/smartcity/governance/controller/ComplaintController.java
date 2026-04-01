@@ -57,6 +57,7 @@ public class ComplaintController {
                     "' has been auto-assigned to officer " + officer.getName() +
                     " from " + dept + " department.");
             citizenNotif.setRole("CITIZEN");
+            citizenNotif.setUser(complaint.getUser());
             citizenNotif.setCreatedAt(java.time.LocalDateTime.now());
             notificationRepository.save(citizenNotif);
 
@@ -65,6 +66,7 @@ public class ComplaintController {
                     complaint.getTitle() + "' — Priority: " +
                     complaint.getPriority());
             officerNotif.setRole("OFFICER");
+            officerNotif.setUser(officer);
             officerNotif.setCreatedAt(java.time.LocalDateTime.now());
             notificationRepository.save(officerNotif);
 
@@ -106,6 +108,7 @@ public class ComplaintController {
         notif.setMessage("Your complaint '" + complaint.getTitle() +
                 "' has been assigned to officer " + officer.getName());
         notif.setRole("CITIZEN");
+        notif.setUser(complaint.getUser());
         notif.setCreatedAt(java.time.LocalDateTime.now());
         notificationRepository.save(notif);
 
@@ -133,6 +136,7 @@ public class ComplaintController {
         notif.setMessage("Your complaint '" + complaint.getTitle() +
                 "' status updated to " + status);
         notif.setRole("CITIZEN");
+        notif.setUser(complaint.getUser());
         notif.setCreatedAt(java.time.LocalDateTime.now());
         notificationRepository.save(notif);
 
@@ -200,6 +204,7 @@ public class ComplaintController {
         notif.setMessage("⭐ Your resolved complaint '" + complaint.getTitle() +
                 "' received a " + request.getRating() + "-star rating.");
         notif.setRole("OFFICER");
+        notif.setUser(complaint.getAssignedOfficer());
         notif.setCreatedAt(java.time.LocalDateTime.now());
         notificationRepository.save(notif);
 
@@ -243,6 +248,7 @@ public class ComplaintController {
 
         String email = authentication.getName();
         User officer = userRepository.findByEmail(email);
+        User admin = userRepository.findFirstByRole(Role.ADMIN);
 
         Complaint complaint = complaintRepository.findById(complaintId)
                 .orElseThrow(() -> new RuntimeException("Complaint not found"));
@@ -260,6 +266,7 @@ public class ComplaintController {
         notif.setMessage("⚠️ Coordination requested for complaint '" 
                 + complaint.getTitle() + "' to " + department);
         notif.setRole("ADMIN");
+        notif.setUser(admin);
         notif.setCreatedAt(LocalDateTime.now());
         notificationRepository.save(notif);
 

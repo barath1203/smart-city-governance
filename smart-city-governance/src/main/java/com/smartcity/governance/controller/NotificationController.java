@@ -3,6 +3,7 @@ package com.smartcity.governance.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,10 +23,12 @@ public class NotificationController {
     private UserRepository userRepository;
 
     @GetMapping("/my")
-    public List<Notification> getMyNotifications(Authentication auth) {
+    public ResponseEntity<List<Notification>> getMyNotifications(Authentication auth) {
         String email = auth.getName();
         User user = userRepository.findByEmail(email);
-        return notificationRepository.findByUser(user);
+        List<Notification> notifications = notificationRepository
+                .findByUserOrderByCreatedAtDesc(user);
+        return ResponseEntity.ok(notifications);
     }
 }
 

@@ -8,4 +8,5 @@ import com.smartcity.governance.model.User;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByRole(String role);
     List<Notification> findByUser(User user);
+    List<Notification> findByUserOrderByCreatedAtDesc(User user);
 }
