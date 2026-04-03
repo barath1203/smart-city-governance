@@ -1,12 +1,31 @@
 package com.smartcity.governance.controller;
 
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import com.smartcity.governance.model.*;
-import com.smartcity.governance.repository.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.smartcity.governance.model.Complaint;
+import com.smartcity.governance.model.ComplaintPriority;
+import com.smartcity.governance.model.ComplaintStatus;
+import com.smartcity.governance.model.CoordinationRequest;
+import com.smartcity.governance.model.Department;
+import com.smartcity.governance.model.Notification;
+import com.smartcity.governance.model.RequestStatus;
+import com.smartcity.governance.model.User;
+import com.smartcity.governance.repository.ComplaintRepository;
+import com.smartcity.governance.repository.CoordinationRequestRepository;
+import com.smartcity.governance.repository.NotificationRepository;
+import com.smartcity.governance.repository.UserRepository;
 import com.smartcity.governance.service.NotificationService;
 import com.smartcity.governance.service.PerformanceService;
 
@@ -26,10 +45,10 @@ public class OfficerController {
 
 	@Autowired
 	private NotificationService notificationService;
-	
+
 	@Autowired
 	private PerformanceService performanceService;
-	
+
 	@Autowired
 	private CoordinationRequestRepository coordinationRequestRepository;
 
@@ -93,13 +112,13 @@ public class OfficerController {
 		User officer = userRepository.findByEmail(email);
 		return complaintRepository.findByAssignedOfficerAndPriority(officer, priority);
 	}
-	
+
 	@GetMapping("/performance")
 	public int getPerformance(Authentication auth) {
 	    User officer = userRepository.findByEmail(auth.getName());
 	    return officer.getPerformanceScore();
 	}
-	
+
 	@PostMapping("/request-coordination/{complaintId}")
 	public ResponseEntity<?> requestCoordination(
 	        @PathVariable Long complaintId,

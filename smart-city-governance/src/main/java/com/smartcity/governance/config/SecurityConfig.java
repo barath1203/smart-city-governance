@@ -1,7 +1,7 @@
 package com.smartcity.governance.config;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -9,11 +9,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import com.smartcity.governance.security.JwtAuthFilter;
-import com.smartcity.governance.security.JwtService;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.smartcity.governance.security.JwtAuthFilter;
+import com.smartcity.governance.security.JwtService;
 
 @Configuration
 public class SecurityConfig {
@@ -36,12 +37,16 @@ public class SecurityConfig {
                 .requestMatchers("/api/notifications/**").permitAll()
                 .requestMatchers("/api/upload/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
-                .requestMatchers("/api/officer/**").hasRole("OFFICER")    
+                .requestMatchers("/api/officer/**").hasRole("OFFICER")
                 .requestMatchers("/api/complaints/create/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/user/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/update-status/**").hasAnyRole("OFFICER", "ADMIN")
                 .requestMatchers("/api/complaints/all").hasAnyRole("OFFICER", "ADMIN" , "DEPARTMENT_HEAD")
                 .requestMatchers("/api/complaints/request-coordination/**").hasRole("OFFICER")
+                .requestMatchers("/api/chatbot/faq").permitAll()
+                .requestMatchers("/api/chatbot/status/**").permitAll()
+                .requestMatchers("/api/chatbot/suggest-department").permitAll()
+                .requestMatchers("/api/chatbot/submit-complaint").hasRole("CITIZEN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
@@ -68,13 +73,13 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-    
+
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
             .requestMatchers("/ws/**");
     }
-    
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

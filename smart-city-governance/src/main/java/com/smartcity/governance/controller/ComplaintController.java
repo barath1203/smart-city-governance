@@ -4,13 +4,33 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import com.smartcity.governance.model.*;
-import com.smartcity.governance.repository.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.smartcity.governance.model.Complaint;
+import com.smartcity.governance.model.ComplaintStatus;
+import com.smartcity.governance.model.Department;
+import com.smartcity.governance.model.Notification;
+import com.smartcity.governance.model.OfficerRating;
+import com.smartcity.governance.model.RatingRequest;
+import com.smartcity.governance.model.RatingSource;
+import com.smartcity.governance.model.Role;
+import com.smartcity.governance.model.User;
+import com.smartcity.governance.repository.ComplaintRepository;
+import com.smartcity.governance.repository.NotificationRepository;
+import com.smartcity.governance.repository.OfficerRatingRepository;
+import com.smartcity.governance.repository.UserRepository;
 import com.smartcity.governance.service.NotificationService;
 import com.smartcity.governance.service.PerformanceService;
 
@@ -27,10 +47,10 @@ public class ComplaintController {
 
     @Autowired
     private NotificationRepository notificationRepository;
-    
+
     @Autowired
-    private NotificationService notificationService;  
-    
+    private NotificationService notificationService;
+
     @Autowired private OfficerRatingRepository ratingRepository;
     @Autowired private PerformanceService performanceService;
 
@@ -161,19 +181,25 @@ public class ComplaintController {
         User citizen = userRepository.findByEmail(email);
 
         Complaint complaint = complaintRepository.findById(complaintId).orElse(null);
-        if (complaint == null) return ResponseEntity.notFound().build();
+        if (complaint == null) {
+			return ResponseEntity.notFound().build();
+		}
 
-        if (!complaint.getUser().getId().equals(citizen.getId()))
-            return ResponseEntity.status(403).body("You can only rate your own complaints");
+        if (!complaint.getUser().getId().equals(citizen.getId())) {
+			return ResponseEntity.status(403).body("You can only rate your own complaints");
+		}
 
-        if (complaint.getStatus() != ComplaintStatus.RESOLVED)
-            return ResponseEntity.badRequest().body("You can only rate resolved complaints");
+        if (complaint.getStatus() != ComplaintStatus.RESOLVED) {
+			return ResponseEntity.badRequest().body("You can only rate resolved complaints");
+		}
 
-        if (complaint.isRated())
-            return ResponseEntity.badRequest().body("You have already rated this complaint");
+        if (complaint.isRated()) {
+			return ResponseEntity.badRequest().body("You have already rated this complaint");
+		}
 
-        if (request.getRating() < 1 || request.getRating() > 5)
-            return ResponseEntity.badRequest().body("Rating must be between 1 and 5");
+        if (request.getRating() < 1 || request.getRating() > 5) {
+			return ResponseEntity.badRequest().body("Rating must be between 1 and 5");
+		}
 
         // Existing logic — unchanged
         complaint.setRating(request.getRating());
@@ -216,7 +242,9 @@ public class ComplaintController {
             @PathVariable Long officerId) {
 
         User officer = userRepository.findById(officerId).orElse(null);
-        if (officer == null) return ResponseEntity.notFound().build();
+        if (officer == null) {
+			return ResponseEntity.notFound().build();
+		}
 
         List<OfficerRating> citizenRatings = ratingRepository
             .findByOfficerAndSource(officer, RatingSource.CITIZEN);
@@ -239,7 +267,7 @@ public class ComplaintController {
 
         return ResponseEntity.ok(result);
     }
-    
+
     @PostMapping("/request-coordination/{complaintId}")
     public ResponseEntity<?> requestCoordination(
             @PathVariable Long complaintId,
@@ -263,7 +291,7 @@ public class ComplaintController {
 
         // notify admin
         Notification notif = new Notification();
-        notif.setMessage("⚠️ Coordination requested for complaint '" 
+        notif.setMessage("⚠️ Coordination requested for complaint '"
                 + complaint.getTitle() + "' to " + department);
         notif.setRole("ADMIN");
         notif.setUser(admin);

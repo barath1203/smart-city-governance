@@ -1,7 +1,8 @@
 package com.smartcity.governance.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.smartcity.governance.model.Department;
 import com.smartcity.governance.model.Role;
@@ -14,8 +15,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRole(Role role);
 
     List<User> findByDepartmentAndRole(Department department, Role role);
-    
+
     User findFirstByRoleAndDepartment(Role role, Department department);
-    
+
     User findFirstByRole(Role role);
 }

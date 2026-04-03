@@ -4,11 +4,34 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.smartcity.governance.model.*;
-import com.smartcity.governance.repository.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.smartcity.governance.model.Complaint;
+import com.smartcity.governance.model.ComplaintPriority;
+import com.smartcity.governance.model.ComplaintStatus;
+import com.smartcity.governance.model.CoordinationAssignment;
+import com.smartcity.governance.model.CoordinationRequest;
+import com.smartcity.governance.model.Department;
+import com.smartcity.governance.model.Notification;
+import com.smartcity.governance.model.RequestStatus;
+import com.smartcity.governance.model.Role;
+import com.smartcity.governance.model.User;
+import com.smartcity.governance.repository.ComplaintRepository;
+import com.smartcity.governance.repository.CoordinationAssignmentRepository;
+import com.smartcity.governance.repository.CoordinationRequestRepository;
+import com.smartcity.governance.repository.NotificationRepository;
+import com.smartcity.governance.repository.UserRepository;
 import com.smartcity.governance.service.NotificationService;
 
 @RestController
@@ -24,13 +47,13 @@ public class AdminController {
 
     @Autowired
     private NotificationRepository notificationRepository;
-    
+
     @Autowired
     private CoordinationRequestRepository coordinationRequestRepository ;
-    
+
     @Autowired
     private CoordinationAssignmentRepository coordinationAssignmentRepository ;
-    
+
     @Autowired
     private NotificationService notificationService;
 
@@ -117,7 +140,7 @@ public class AdminController {
 
         return ResponseEntity.ok("Officer assigned successfully");
     }
-    
+
     @PostMapping("/create-dh")
     public ResponseEntity<?> createDepartmentHead(@RequestBody User user) {
 
@@ -137,12 +160,12 @@ public class AdminController {
         userRepository.save(user);
         return ResponseEntity.ok("Department head added successfully");
     }
-    
+
     @GetMapping("/coordination-requests")
     public List<CoordinationRequest> getPendingRequests() {
         return coordinationRequestRepository.findByStatus(RequestStatus.PENDING);
     }
-    
+
     @PostMapping("/approve-request/{id}")
     public ResponseEntity<?> approveRequest(@PathVariable Long id) {
 
@@ -210,7 +233,7 @@ public class AdminController {
 
         return ResponseEntity.ok("Approved");
     }
-    
+
     @PostMapping("/reject-request/{id}")
     public ResponseEntity<?> rejectRequest(@PathVariable Long id) {
 
@@ -227,5 +250,5 @@ public class AdminController {
 
         return ResponseEntity.ok("Rejected");
     }
- 
+
 }

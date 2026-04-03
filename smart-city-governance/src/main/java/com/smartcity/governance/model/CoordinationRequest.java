@@ -30,10 +30,10 @@ public class CoordinationRequest {
 
     @Enumerated(EnumType.STRING)
     private RequestStatus status; // PENDING, APPROVED, REJECTED
-    
+
     private boolean coordinationOfficerPending = false;
 
-    
+
 
 	private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -92,7 +92,7 @@ public class CoordinationRequest {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
-	
+
 	public boolean isCoordinationOfficerPending() {
 		return coordinationOfficerPending;
 	}
@@ -100,5 +100,5 @@ public class CoordinationRequest {
 	public void setCoordinationOfficerPending(boolean coordinationOfficerPending) {
 		this.coordinationOfficerPending = coordinationOfficerPending;
 	}
- 
+
 }

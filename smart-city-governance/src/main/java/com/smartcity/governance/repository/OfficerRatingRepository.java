@@ -1,11 +1,13 @@
 package com.smartcity.governance.repository;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import com.smartcity.governance.model.OfficerRating;
 import com.smartcity.governance.model.RatingSource;
 import com.smartcity.governance.model.User;
-import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
-import java.util.Optional;
 
 public interface OfficerRatingRepository extends JpaRepository<OfficerRating, Long> {
 

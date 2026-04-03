@@ -1,6 +1,22 @@
 package com.smartcity.governance.controller;
 
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.smartcity.governance.model.Complaint;
 import com.smartcity.governance.model.ComplaintPriority;
 import com.smartcity.governance.model.ComplaintStatus;
@@ -13,14 +29,6 @@ import com.smartcity.governance.repository.OfficerRatingRepository;
 import com.smartcity.governance.repository.UserRepository;
 import com.smartcity.governance.service.PerformanceService;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/dh")
 @CrossOrigin(origins = "*")
@@ -31,10 +39,10 @@ public class DepartmentHeadController {
 
     @Autowired
     private ComplaintRepository complaintRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Autowired private OfficerRatingRepository ratingRepository;
     @Autowired private PerformanceService performanceService;
 
@@ -43,7 +51,9 @@ public class DepartmentHeadController {
     public User createOfficer(@RequestBody User user, Authentication auth) {
         String email = auth.getName();
         User dh = userRepository.findByEmail(email);
-        if (dh == null) throw new RuntimeException("DH not found");
+        if (dh == null) {
+			throw new RuntimeException("DH not found");
+		}
         if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new RuntimeException("Email already exists");
         }
@@ -121,7 +131,7 @@ public class DepartmentHeadController {
 
         return userRepository.save(officer);
     }
-    
+
     @GetMapping("/escalated")
     public ResponseEntity<List<Complaint>> getEscalatedComplaints(Authentication auth) {
         User dh = userRepository.findByEmail(auth.getName());
@@ -129,7 +139,7 @@ public class DepartmentHeadController {
             .findByDepartmentAndEscalatedTrue(dh.getDepartment());
         return ResponseEntity.ok(escalated);
     }
-    
+
     @PutMapping("/complaints/{id}/priority")
     public ResponseEntity<?> updatePriority(
             @PathVariable Long id,
@@ -148,7 +158,7 @@ public class DepartmentHeadController {
         complaintRepository.save(complaint);
         return ResponseEntity.ok("Priority updated");
     }
-    
+
 
     @PostMapping("/complaints/{id}/rate")
     public ResponseEntity<?> rateOfficer(

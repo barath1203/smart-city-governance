@@ -1,5 +1,8 @@
 package com.smartcity.governance.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -10,9 +13,6 @@ import com.smartcity.governance.model.ComplaintStatus;
 import com.smartcity.governance.model.Notification;
 import com.smartcity.governance.repository.ComplaintRepository;
 import com.smartcity.governance.repository.NotificationRepository;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Component
 public class EscalationScheduler {

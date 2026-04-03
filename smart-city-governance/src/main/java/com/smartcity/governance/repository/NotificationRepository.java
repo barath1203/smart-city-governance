@@ -1,7 +1,9 @@
 package com.smartcity.governance.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import com.smartcity.governance.model.Notification;
 import com.smartcity.governance.model.User;
 

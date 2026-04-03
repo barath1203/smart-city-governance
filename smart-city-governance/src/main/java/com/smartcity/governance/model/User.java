@@ -1,6 +1,13 @@
 package com.smartcity.governance.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
@@ -18,15 +25,15 @@ public class User {
 
     @Column(nullable = false)
     private String password;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable=true)
     private Department department;
-    
+
     @Column(columnDefinition = "int default 0")
     private int performanceScore = 0;
 
@@ -47,7 +54,7 @@ public class User {
 
     public Department getDepartment() { return department; }
     public void setDepartment(Department department) { this.department = department; }
-    
+
     public int getPerformanceScore() {
         return performanceScore;
     }

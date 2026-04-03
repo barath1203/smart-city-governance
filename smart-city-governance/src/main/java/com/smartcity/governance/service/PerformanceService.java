@@ -28,11 +28,11 @@ public class PerformanceService {
         int resolved  = (int) assigned.stream()
             .filter(c -> c.getStatus() == ComplaintStatus.RESOLVED).count();
         int escalated = (int) assigned.stream()
-            .filter(c -> Boolean.TRUE.equals(c.isEscalated())).count();
+            .filter(c -> c.isEscalated()).count();
 
         double resolutionRate    = total > 0 ? (resolved * 100.0 / total) : 0;
         double escalationPenalty = total > 0 ? (escalated * 100.0 / total) : 0;
-        
+
         long onTimeResolved = assigned.stream()
         	    .filter(c -> c.getStatus() == ComplaintStatus.RESOLVED &&
         	                 c.getResolvedAt() != null &&
@@ -63,12 +63,16 @@ public class PerformanceService {
         	    (dhAvg / 5.0 * 100 * 0.20) +
         	    (citizenAvg / 5.0 * 100 * 0.15)
         	);
-        
+
         for (OfficerRating r : dhRatings) {
             if (r.getFeedback() != null) {
                 String f = r.getFeedback().toLowerCase();
-                if (f.contains("delay")) score -= 5;
-                if (f.contains("excellent")) score += 5;
+                if (f.contains("delay")) {
+					score -= 5;
+				}
+                if (f.contains("excellent")) {
+					score += 5;
+				}
             }
         }
 

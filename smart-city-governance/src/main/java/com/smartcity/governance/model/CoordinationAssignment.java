@@ -20,10 +20,10 @@ public class CoordinationAssignment {
 
     @ManyToOne
     private User officer;
-    
+
     @Enumerated(EnumType.STRING)
     private Department department;
-    
+
     private boolean active = true;
 
     public Long getId() {
@@ -66,5 +66,5 @@ public class CoordinationAssignment {
 		this.department = department;
 	}
 
-	
+
 }

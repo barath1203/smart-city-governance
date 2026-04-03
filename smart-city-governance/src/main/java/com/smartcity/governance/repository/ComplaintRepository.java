@@ -1,5 +1,7 @@
 package com.smartcity.governance.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,8 +10,6 @@ import com.smartcity.governance.model.ComplaintPriority;
 import com.smartcity.governance.model.ComplaintStatus;
 import com.smartcity.governance.model.Department;
 import com.smartcity.governance.model.User;
-import java.time.LocalDateTime;
-import java.util.List;
 
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
@@ -28,11 +28,8 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findOverdueComplaints(@Param("now") LocalDateTime now);
 
     List<Complaint> findByEscalatedTrue();
-
-    // ✅ Rating queries
     List<Complaint> findByRatedTrue();
     List<Complaint> findByAssignedOfficerAndRatedTrue(User officer);
     List<Complaint> findByDepartment(Department department);
-    
     List<Complaint> findByDepartmentAndEscalatedTrue(Department department);
 }
