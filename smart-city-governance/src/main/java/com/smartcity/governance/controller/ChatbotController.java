@@ -43,8 +43,16 @@ public class ChatbotController {
     // Department suggestion
     @GetMapping("/suggest-department")
     public ResponseEntity<?> suggestDepartment(@RequestParam String text) {
-        Department dept = departmentRouter.route(text);
-        return ResponseEntity.ok(Map.of("department", dept.name()));
+        DepartmentRouter.CategorizationResult result = departmentRouter.categorize(text);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("department",        result.department().name());
+        response.put("priority",          result.priority().name());
+        response.put("confidence",        result.confidence());
+        response.put("conflict",          result.conflict());
+        response.put("sensitiveLocation", result.sensitiveLocation());
+
+        return ResponseEntity.ok(response);
     }
 
     // FAQ keyword match
