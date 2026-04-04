@@ -18,6 +18,7 @@ public class ChatbotController {
     @Autowired private UserRepository userRepository;
     @Autowired private FaqRepository faqRepository;
     @Autowired private DepartmentRouter departmentRouter;
+    @Autowired private NotificationRepository notificationRepository;
 
     // Status tracker
     @GetMapping("/status/{complaintId}")
@@ -92,36 +93,77 @@ public class ChatbotController {
     // Submit complaint from bot
     @PostMapping("/submit-complaint")
     public ResponseEntity<?> submitComplaint(
-            @RequestBody Map<String, String> body,
+            @RequestBody Map<String, Object> body,
             Authentication auth) {
 
-        User citizen = userRepository.findByEmail(auth.getName());
-
-        Complaint c = new Complaint();
-        c.setTitle(body.get("title"));
-        c.setDescription(body.get("description"));
-        c.setLocation(body.get("location"));
-        c.setDepartment(Department.valueOf(body.get("department")));
-        c.setPriority(ComplaintPriority.valueOf(
-            body.getOrDefault("priority", "LOW")));
-        c.setUser(citizen);
-
-        // auto-assign officer same as create flow
-        User officer = userRepository.findFirstByRoleAndDepartment(
-            Role.OFFICER, c.getDepartment());
-        if (officer != null) {
-            c.setAssignedOfficer(officer);
-            c.setStatus(ComplaintStatus.IN_PROGRESS);
-        } else {
-            c.setStatus(ComplaintStatus.OPEN);
+        if (auth == null || auth.getName() == null) {
+            return ResponseEntity.status(401).body("Not authenticated");
         }
 
-        Complaint saved = complaintRepository.save(c);
+        User citizen = userRepository.findByEmail(auth.getName());
+        if (citizen == null) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+
+        // Build complaint the same way ComplaintController does
+        Complaint complaint = new Complaint();
+        complaint.setTitle(body.get("title").toString());
+        complaint.setDescription(body.get("description").toString());
+        complaint.setLocation(body.getOrDefault("location", "").toString());
+        complaint.setDepartment(Department.valueOf(body.get("department").toString()));
+        complaint.setPriority(ComplaintPriority.valueOf(
+            body.getOrDefault("priority", "LOW").toString()));
+        complaint.setUser(citizen);
+
+        // Coordinates
+        try {
+            Object lat = body.get("latitude");
+            Object lng = body.get("longitude");
+            if (lat != null && lng != null) {
+                complaint.setLatitude(Double.parseDouble(lat.toString()));
+                complaint.setLongitude(Double.parseDouble(lng.toString()));
+            }
+        } catch (NumberFormatException ignored) {}
+
+        // ✅ Same auto-assign logic as ComplaintController
+        String dept = complaint.getDepartment().name();
+        User officer = userRepository.findFirstByRoleAndDepartment(
+            Role.OFFICER, complaint.getDepartment());
+
+        complaint.getDepartments().add(complaint.getDepartment());
+
+        if (officer != null) {
+            complaint.setAssignedOfficer(officer);
+            complaint.setStatus(ComplaintStatus.IN_PROGRESS);
+
+            Notification citizenNotif = new Notification();
+            citizenNotif.setMessage("Your complaint '" + complaint.getTitle() +
+                "' has been auto-assigned to officer " + officer.getName() +
+                " from " + dept + " department.");
+            citizenNotif.setRole("CITIZEN");
+            citizenNotif.setUser(citizen);
+            citizenNotif.setCreatedAt(java.time.LocalDateTime.now());
+            notificationRepository.save(citizenNotif);
+
+            Notification officerNotif = new Notification();
+            officerNotif.setMessage("New complaint assigned to you: '" +
+                complaint.getTitle() + "' — Priority: " + complaint.getPriority());
+            officerNotif.setRole("OFFICER");
+            officerNotif.setUser(officer);
+            officerNotif.setCreatedAt(java.time.LocalDateTime.now());
+            notificationRepository.save(officerNotif);
+
+        } else {
+            complaint.setStatus(ComplaintStatus.OPEN);
+        }
+
+        Complaint saved = complaintRepository.save(complaint);
+
         return ResponseEntity.ok(Map.of(
-            "id",      saved.getId(),
-            "title",   saved.getTitle(),
-            "status",  saved.getStatus(),
-            "department", saved.getDepartment()
+            "id",         saved.getId(),
+            "title",      saved.getTitle(),
+            "status",     saved.getStatus().name(),
+            "department", saved.getDepartment().name(),
+            "officer",    officer != null ? officer.getName() : "Unassigned"
         ));
-    }
-}
+    }}
