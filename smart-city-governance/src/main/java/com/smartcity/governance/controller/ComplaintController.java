@@ -36,7 +36,6 @@ import com.smartcity.governance.service.PerformanceService;
 
 @RestController
 @RequestMapping("/api/complaints")
-@CrossOrigin(origins = "*")
 public class ComplaintController {
 
     @Autowired

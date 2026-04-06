@@ -31,7 +31,6 @@ import com.smartcity.governance.service.PerformanceService;
 
 @RestController
 @RequestMapping("/api/dh")
-@CrossOrigin(origins = "*")
 public class DepartmentHeadController {
 
     @Autowired

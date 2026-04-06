@@ -18,7 +18,6 @@ import com.smartcity.governance.security.JwtService;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin
 public class AuthController {
 
     @Autowired

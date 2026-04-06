@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/upload")
-@CrossOrigin(origins = "*")
 public class FileUploadController {
 
     private static final String UPLOAD_DIR = "uploads/";

@@ -36,7 +36,6 @@ import com.smartcity.governance.service.NotificationService;
 
 @RestController
 @RequestMapping("/api/admin")
-@CrossOrigin(origins = "*")
 public class AdminController {
 
     @Autowired
