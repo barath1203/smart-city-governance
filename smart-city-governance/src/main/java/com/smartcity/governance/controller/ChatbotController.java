@@ -19,10 +19,67 @@ public class ChatbotController {
     @Autowired private DepartmentRouter departmentRouter;
     @Autowired private NotificationRepository notificationRepository;
 
+    // ── Department label → Enum map ──────────────
+    private static final Map<String, Department> DEPT_MAP = new LinkedHashMap<>();
+    static {
+        DEPT_MAP.put("Water",       Department.WATER);
+        DEPT_MAP.put("Road",        Department.ROAD);
+        DEPT_MAP.put("Electricity", Department.ELECTRICITY);
+        DEPT_MAP.put("Sanitation",  Department.SANITATION);
+        // Also support direct enum names as fallback
+        DEPT_MAP.put("WATER",       Department.WATER);
+        DEPT_MAP.put("ROAD",        Department.ROAD);
+        DEPT_MAP.put("ELECTRICITY", Department.ELECTRICITY);
+        DEPT_MAP.put("SANITATION",  Department.SANITATION);
+    }
+
+    // ──────────────────────────────────────────────
+    // Get active complaints of logged-in citizen
+    // ──────────────────────────────────────────────
+    @GetMapping("/my-active-complaints")
+    public ResponseEntity<?> getActiveComplaints(Authentication auth) {
+        if (auth == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        User citizen = userRepository.findByEmail(auth.getName());
+        if (citizen == null) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+
+        List<Complaint> activeComplaints = complaintRepository
+            .findByUserAndStatusNot(citizen, ComplaintStatus.RESOLVED);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Complaint c : activeComplaints) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id",     c.getId());
+            map.put("title",  c.getTitle());
+            map.put("status", c.getStatus());
+            result.add(map);
+        }
+
+        return ResponseEntity.ok(result);
+    }
+
+    // ──────────────────────────────────────────────
     // Status tracker
+    // ──────────────────────────────────────────────
     @GetMapping("/status/{complaintId}")
-    public ResponseEntity<?> getStatus(@PathVariable Long complaintId) {
-        return complaintRepository.findById(complaintId)
+    public ResponseEntity<?> getStatus(
+            @PathVariable Long complaintId,
+            Authentication auth) {
+
+        if (auth == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        User citizen = userRepository.findByEmail(auth.getName());
+        if (citizen == null) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+
+        return complaintRepository.findByIdAndUser(complaintId, citizen)
             .map(c -> {
                 Map<String, Object> res = new LinkedHashMap<>();
                 res.put("id",          c.getId());
@@ -40,7 +97,9 @@ public class ChatbotController {
             .orElse(ResponseEntity.notFound().build());
     }
 
+    // ──────────────────────────────────────────────
     // Department suggestion
+    // ──────────────────────────────────────────────
     @GetMapping("/suggest-department")
     public ResponseEntity<?> suggestDepartment(@RequestParam String text) {
         DepartmentRouter.CategorizationResult result = departmentRouter.categorize(text);
@@ -55,7 +114,9 @@ public class ChatbotController {
         return ResponseEntity.ok(response);
     }
 
-    // FAQ keyword match
+    // ──────────────────────────────────────────────
+    // FAQ
+    // ──────────────────────────────────────────────
     @GetMapping("/faq")
     public ResponseEntity<?> getFaq(@RequestParam String query) {
         String lower = query.toLowerCase();
@@ -72,7 +133,6 @@ public class ChatbotController {
             return ResponseEntity.ok(Map.of("answer", best.getAnswer()));
         }
 
-        // single keyword match fallback
         FaqEntry fallback = all.stream()
             .filter(f -> f.getKeywords().stream()
                 .anyMatch(k -> lower.contains(k.toLowerCase())))
@@ -89,11 +149,17 @@ public class ChatbotController {
         ));
     }
 
+    // ──────────────────────────────────────────────
     // Submit complaint from bot
+    // ──────────────────────────────────────────────
     @PostMapping("/submit-complaint")
     public ResponseEntity<?> submitComplaint(
             @RequestBody Map<String, Object> body,
             Authentication auth) {
+
+        System.out.println("=== CHATBOT SUBMIT HIT ===");
+        System.out.println("Auth: " + (auth != null ? auth.getName() : "NULL"));
+        System.out.println("Body: " + body);
 
         if (auth == null || auth.getName() == null) {
             return ResponseEntity.status(401).body("Not authenticated");
@@ -104,12 +170,20 @@ public class ChatbotController {
             return ResponseEntity.status(404).body("User not found");
         }
 
-        // Build complaint the same way ComplaintController does
+        // ✅ Convert department label to enum using DEPT_MAP
+        String deptLabel = body.get("department").toString();
+        Department deptEnum = DEPT_MAP.get(deptLabel);
+        if (deptEnum == null) {
+            System.out.println("❌ Unknown department: " + deptLabel);
+            return ResponseEntity.status(400).body("Unknown department: " + deptLabel);
+        }
+        System.out.println("✅ Department: " + deptLabel + " → " + deptEnum);
+
         Complaint complaint = new Complaint();
         complaint.setTitle(body.get("title").toString());
         complaint.setDescription(body.get("description").toString());
         complaint.setLocation(body.getOrDefault("location", "").toString());
-        complaint.setDepartment(Department.valueOf(body.get("department").toString()));
+        complaint.setDepartment(deptEnum);
         complaint.setPriority(ComplaintPriority.valueOf(
             body.getOrDefault("priority", "LOW").toString()));
         complaint.setUser(citizen);
@@ -118,34 +192,37 @@ public class ChatbotController {
         try {
             Object lat = body.get("latitude");
             Object lng = body.get("longitude");
-            if (lat != null && lng != null) {
+            if (lat != null && lng != null &&
+                !lat.toString().equals("null") && !lng.toString().equals("null")) {
                 complaint.setLatitude(Double.parseDouble(lat.toString()));
                 complaint.setLongitude(Double.parseDouble(lng.toString()));
             }
         } catch (NumberFormatException ignored) {}
 
-        // ✅ Same auto-assign logic as ComplaintController
-        String dept = complaint.getDepartment().name();
+        // ✅ Auto-assign officer
         User officer = userRepository.findFirstByRoleAndDepartment(
-            Role.OFFICER, complaint.getDepartment());
+            Role.OFFICER, deptEnum);
 
-        complaint.getDepartments().add(complaint.getDepartment());
+        complaint.getDepartments().add(deptEnum);
 
         if (officer != null) {
             complaint.setAssignedOfficer(officer);
             complaint.setStatus(ComplaintStatus.IN_PROGRESS);
+            System.out.println("✅ Officer assigned: " + officer.getName());
 
+            // Notify citizen
             Notification citizenNotif = new Notification();
             citizenNotif.setMessage("Your complaint '" + complaint.getTitle() +
-                "' has been auto-assigned to officer " + officer.getName() +
-                " from " + dept + " department.");
+                "' has been assigned to officer " + officer.getName() +
+                " from " + deptEnum.name() + " department.");
             citizenNotif.setRole("CITIZEN");
             citizenNotif.setUser(citizen);
             citizenNotif.setCreatedAt(java.time.LocalDateTime.now());
             notificationRepository.save(citizenNotif);
 
+            // Notify officer
             Notification officerNotif = new Notification();
-            officerNotif.setMessage("New complaint assigned to you: '" +
+            officerNotif.setMessage("New complaint assigned: '" +
                 complaint.getTitle() + "' — Priority: " + complaint.getPriority());
             officerNotif.setRole("OFFICER");
             officerNotif.setUser(officer);
@@ -154,9 +231,11 @@ public class ChatbotController {
 
         } else {
             complaint.setStatus(ComplaintStatus.OPEN);
+            System.out.println("⚠️ No officer found for: " + deptEnum);
         }
 
         Complaint saved = complaintRepository.save(complaint);
+        System.out.println("✅ Complaint saved with ID: " + saved.getId());
 
         return ResponseEntity.ok(Map.of(
             "id",         saved.getId(),
@@ -165,4 +244,5 @@ public class ChatbotController {
             "department", saved.getDepartment().name(),
             "officer",    officer != null ? officer.getName() : "Unassigned"
         ));
-    }}
+    }
+}
