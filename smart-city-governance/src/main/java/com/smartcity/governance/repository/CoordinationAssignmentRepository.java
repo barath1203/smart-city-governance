@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.smartcity.governance.model.Complaint;
 import com.smartcity.governance.model.CoordinationAssignment;
+import com.smartcity.governance.model.User;
 
 public interface CoordinationAssignmentRepository
         extends JpaRepository<CoordinationAssignment, Long> {
@@ -16,4 +17,6 @@ public interface CoordinationAssignmentRepository
     List<CoordinationAssignment> findByOfficerId(Long officerId);
 
     List<CoordinationAssignment> findByComplaintAndActiveTrue(Complaint complaint); // 🔥 useful
+    
+    List<CoordinationAssignment> findByOfficerAndActiveTrue(User officer);
 }

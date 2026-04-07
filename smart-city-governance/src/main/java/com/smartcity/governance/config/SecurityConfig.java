@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/officer/**").hasRole("OFFICER")
                 .requestMatchers("/api/complaints/create/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/user/**").hasRole("CITIZEN")
+                .requestMatchers("/api/complaints/officer-rating/**").hasAnyRole("OFFICER", "DEPARTMENT_HEAD") 
                 .requestMatchers("/api/complaints/update-status/**").hasAnyRole("OFFICER", "ADMIN")
                 .requestMatchers("/api/complaints/all").hasAnyRole("OFFICER", "ADMIN" , "DEPARTMENT_HEAD")
                 .requestMatchers("/api/complaints/request-coordination/**").hasRole("OFFICER")

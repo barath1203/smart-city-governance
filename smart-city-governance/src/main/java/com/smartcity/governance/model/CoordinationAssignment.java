@@ -25,8 +25,19 @@ public class CoordinationAssignment {
     private Department department;
 
     private boolean active = true;
+    
+    @Enumerated(EnumType.STRING)
+    private ComplaintStatus assistStatus = ComplaintStatus.IN_PROGRESS;
 
-    public Long getId() {
+    public ComplaintStatus getAssistStatus() {
+		return assistStatus;
+	}
+
+	public void setAssistStatus(ComplaintStatus assistStatus) {
+		this.assistStatus = assistStatus;
+	}
+
+	public Long getId() {
 		return id;
 	}
 

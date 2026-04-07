@@ -1,5 +1,7 @@
 package com.smartcity.governance.controller;
 
+import java.time.LocalDateTime;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.smartcity.governance.model.Complaint;
 import com.smartcity.governance.model.ComplaintPriority;
 import com.smartcity.governance.model.ComplaintStatus;
+import com.smartcity.governance.model.CoordinationAssignment;
 import com.smartcity.governance.model.CoordinationRequest;
 import com.smartcity.governance.model.Department;
 import com.smartcity.governance.model.Notification;
 import com.smartcity.governance.model.RequestStatus;
 import com.smartcity.governance.model.User;
 import com.smartcity.governance.repository.ComplaintRepository;
+import com.smartcity.governance.repository.CoordinationAssignmentRepository;
 import com.smartcity.governance.repository.CoordinationRequestRepository;
 import com.smartcity.governance.repository.NotificationRepository;
 import com.smartcity.governance.repository.UserRepository;
@@ -50,48 +54,126 @@ public class OfficerController {
 
 	@Autowired
 	private CoordinationRequestRepository coordinationRequestRepository;
+	
+	@Autowired
+	private CoordinationAssignmentRepository coordinationAssignmentRepository;
+	
+	
 
 	// 🔹 1. Get complaints assigned to logged-in officer
 	@GetMapping("/complaints")
 	public List<Complaint> getOfficerComplaints(Authentication authentication) {
-		String email = authentication.getName();
-		User officer = userRepository.findByEmail(email);
-		return complaintRepository.findByAssignedOfficer(officer);
+	    String email = authentication.getName();
+	    User officer = userRepository.findByEmail(email);
+
+	    // Directly assigned complaints
+	    List<Complaint> assigned = complaintRepository.findByAssignedOfficer(officer);
+
+	    // Coordination-assisted complaints
+	    List<Complaint> assisted = coordinationAssignmentRepository
+	            .findByOfficerAndActiveTrue(officer)
+	            .stream()
+	            .map(CoordinationAssignment::getComplaint)
+	            .toList();
+
+	    // Merge without duplicates
+	    List<Complaint> all = new java.util.ArrayList<>(assigned);
+	    for (Complaint c : assisted) {
+	        if (all.stream().noneMatch(x -> x.getId().equals(c.getId()))) {
+	            all.add(c);
+	        }
+	    }
+
+	    return all;
 	}
 
 	// 🔹 2. Update Complaint Status + Notify Citizen
 
 	@PutMapping("/update-status/{id}")
-	public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestParam ComplaintStatus status) {
+	public ResponseEntity<?> updateStatus(@PathVariable Long id,
+	                                       @RequestParam ComplaintStatus status,
+	                                       Authentication authentication) {
 
 	    Complaint complaint = complaintRepository.findById(id).orElse(null);
-	    if (complaint == null) {
-	        return ResponseEntity.notFound().build();
+	    if (complaint == null) return ResponseEntity.notFound().build();
+
+	    User officer = userRepository.findByEmail(authentication.getName());
+
+	    boolean isPrimary = complaint.getAssignedOfficer() != null &&
+	                        complaint.getAssignedOfficer().getId().equals(officer.getId());
+
+	    if (isPrimary) {
+
+	        if (status == ComplaintStatus.RESOLVED) {
+	            // ✅ Check all assisting officers have resolved their part
+	            List<CoordinationAssignment> assignments =
+	                coordinationAssignmentRepository.findByComplaintAndActiveTrue(complaint);
+
+	            boolean allAssistsResolved = assignments.stream()
+	                .allMatch(a -> a.getAssistStatus() == ComplaintStatus.RESOLVED);
+
+	            if (!allAssistsResolved && !assignments.isEmpty()) {
+	                return ResponseEntity.badRequest().body(
+	                    "Cannot resolve yet. Assisting officers have not completed their part."
+	                );
+	            }
+
+	            // ✅ All assists done — resolve
+	            complaint.setStatus(ComplaintStatus.RESOLVED);
+	            complaint.setEscalated(false);
+	            complaint.setResolvedAt(LocalDateTime.now());
+	            performanceService.recalculateScore(officer);
+
+	        } else {
+	            complaint.setStatus(status);
+	        }
+
+	        complaintRepository.save(complaint);
+
+	        // ✅ Notify citizen
+	        Notification notification = new Notification();
+	        notification.setMessage("Your complaint '" + complaint.getTitle() +
+	                "' status has been updated to " + status);
+	        notification.setUser(complaint.getUser());
+	        notification.setCreatedAt(LocalDateTime.now());
+	        notificationRepository.save(notification);
+
+	        notificationService.notifyUser(
+	            complaint.getUser().getEmail(),
+	            "Your complaint '" + complaint.getTitle() + "' is now " + status
+	        );
+
+	    } else {
+	        // ✅ Assisting officer — update only their CoordinationAssignment status
+	        List<CoordinationAssignment> assignments =
+	            coordinationAssignmentRepository.findByOfficerAndActiveTrue(officer);
+
+	        CoordinationAssignment myAssignment = assignments.stream()
+	            .filter(a -> a.getComplaint().getId().equals(complaint.getId()))
+	            .findFirst()
+	            .orElse(null);
+
+	        if (myAssignment == null) {
+	            return ResponseEntity.status(403).body("You are not assigned to this complaint");
+	        }
+
+	        myAssignment.setAssistStatus(status);
+	        coordinationAssignmentRepository.save(myAssignment);
+
+	        // ✅ Notify primary officer
+	        Notification notification = new Notification();
+	        notification.setMessage("Assisting Officer " + officer.getName() +
+	            " marked their part as " + status +
+	            " for complaint: " + complaint.getTitle());
+	        notification.setUser(complaint.getAssignedOfficer());
+	        notification.setCreatedAt(LocalDateTime.now());
+	        notificationRepository.save(notification);
+
+	        notificationService.notifyUser(
+	            complaint.getAssignedOfficer().getEmail(),
+	            notification.getMessage()
+	        );
 	    }
-
-	    complaint.setStatus(status);
-
-	    if (status == ComplaintStatus.RESOLVED) {
-	        complaint.setEscalated(false);
-	        complaint.setResolvedAt(java.time.LocalDateTime.now());
-
-	        // 🔥🔥🔥 MOST IMPORTANT LINE
-	        performanceService.recalculateScore(complaint.getAssignedOfficer());
-	    }
-
-	    complaintRepository.save(complaint);
-
-	    Notification notification = new Notification();
-	    notification.setMessage("Your complaint '" + complaint.getTitle() + "' status has been updated to " + status);
-	    notification.setRole("CITIZEN");
-	    notification.setCreatedAt(java.time.LocalDateTime.now());
-	    notificationRepository.save(notification);
-
-	    String citizenEmail = complaint.getUser().getEmail();
-	    notificationService.notifyUser(
-	        citizenEmail,
-	        "Your complaint '" + complaint.getTitle() + "' is now " + status
-	    );
 
 	    return ResponseEntity.ok("Status updated successfully");
 	}
