@@ -12,7 +12,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import com.smartcity.governance.security.JwtAuthFilter;
 import com.smartcity.governance.security.JwtService;
 
@@ -42,16 +41,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/complaints/user/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/officer-rating/**").hasAnyRole("OFFICER", "DEPARTMENT_HEAD") 
                 .requestMatchers("/api/complaints/update-status/**").hasAnyRole("OFFICER", "ADMIN")
-                .requestMatchers("/api/complaints/all").hasAnyRole("OFFICER", "ADMIN" , "DEPARTMENT_HEAD")
+                .requestMatchers("/api/complaints/all").hasAnyRole("OFFICER", "ADMIN", "DEPARTMENT_HEAD")
                 .requestMatchers("/api/complaints/request-coordination/**").hasRole("OFFICER")
                 .requestMatchers("/api/chatbot/faq").permitAll()
-                .requestMatchers("/api/chatbot/status/**").permitAll()
+                .requestMatchers("/api/chatbot/status/**").hasRole("CITIZEN")
                 .requestMatchers("/api/chatbot/suggest-department").permitAll()
                 .requestMatchers("/api/chatbot/submit-complaint").hasRole("CITIZEN")
-                .requestMatchers("/api/chatbot/submit-complaint").hasRole("CITIZEN")
-                .requestMatchers("/api/chatbot/faq").permitAll()
-                .requestMatchers("/api/chatbot/status/**").permitAll()
-                .requestMatchers("/api/chatbot/suggest-department").permitAll()
+                .requestMatchers("/api/chatbot/my-active-complaints").hasRole("CITIZEN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

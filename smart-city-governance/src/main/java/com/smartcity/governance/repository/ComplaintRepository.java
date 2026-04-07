@@ -2,6 +2,7 @@ package com.smartcity.governance.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,4 +33,10 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByAssignedOfficerAndRatedTrue(User officer);
     List<Complaint> findByDepartment(Department department);
     List<Complaint> findByDepartmentAndEscalatedTrue(Department department);
+
+    // ✅ Added for chatbot — fetch active complaints of logged-in citizen
+    List<Complaint> findByUserAndStatusNot(User user, ComplaintStatus status);
+
+    // ✅ Added for chatbot — fetch complaint only if it belongs to logged-in citizen
+    Optional<Complaint> findByIdAndUser(Long id, User user);
 }
