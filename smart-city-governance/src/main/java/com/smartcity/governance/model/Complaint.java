@@ -32,6 +32,12 @@ public class Complaint {
 	private Double latitude;
 	private Double longitude;
 	private String imageUrl;
+	
+	@ElementCollection
+	@CollectionTable(name = "complaint_images", joinColumns = @JoinColumn(name = "complaint_id"))
+	@Column(name = "image_url")
+	private List<String> imageUrls = new ArrayList<>();
+
 
 	@Enumerated(EnumType.STRING)
 	private ComplaintPriority priority;
@@ -139,6 +145,14 @@ public class Complaint {
 
 	public void setImageUrl(String imageUrl) {
 		this.imageUrl = imageUrl;
+	}
+	
+	public List<String> getImageUrls() {
+	    return imageUrls;
+	}
+
+	public void setImageUrls(List<String> imageUrls) {
+	    this.imageUrls = imageUrls;
 	}
 
 	public ComplaintPriority getPriority() {

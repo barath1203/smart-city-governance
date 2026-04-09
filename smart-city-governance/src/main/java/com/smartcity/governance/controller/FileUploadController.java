@@ -16,25 +16,23 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/upload")
 public class FileUploadController {
 
-    private static final String UPLOAD_DIR = "uploads/";
+    // ✅ Absolute path — goes to your project root's uploads/ folder
+    private static final String UPLOAD_DIR = System.getProperty("user.dir") + File.separator + "uploads" + File.separator;
 
     @PostMapping
     public ResponseEntity<String> uploadFile(
             @RequestParam("file") MultipartFile file) throws IOException {
 
-        // ✅ Create uploads folder if not exists
         File dir = new File(UPLOAD_DIR);
         if (!dir.exists()) {
-			dir.mkdirs();
-		}
+            dir.mkdirs();
+        }
 
-        // ✅ Generate unique filename to avoid overwrite
         String uniqueName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        String filePath = UPLOAD_DIR + uniqueName;
+        File dest = new File(UPLOAD_DIR + uniqueName);
+        file.transferTo(dest.getAbsoluteFile());
 
-        file.transferTo(new File(filePath));
-
-        // ✅ Return path that frontend can use
-        return ResponseEntity.ok(uniqueName);
+        // ✅ Return only the relative path — no http://localhost:8080
+        return ResponseEntity.ok(uniqueName); // just "bdba6b45_Screenshot.png" — nothing else
     }
 }

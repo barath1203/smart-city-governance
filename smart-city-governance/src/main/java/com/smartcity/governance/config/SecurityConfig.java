@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/dh/**").hasRole("DEPARTMENT_HEAD")
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/notifications/**").permitAll()
-                .requestMatchers("/api/upload/**").permitAll()
+                .requestMatchers("/api/upload", "/api/upload/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/api/officer/**").hasRole("OFFICER")
                 .requestMatchers("/api/complaints/create/**").hasRole("CITIZEN")
@@ -79,7 +79,8 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
-            .requestMatchers("/ws/**");
+            .requestMatchers("/ws/**")
+            .requestMatchers("/uploads/**"); // ✅ Add this
     }
 
     @Bean

@@ -62,6 +62,11 @@ public class ComplaintController {
         String email = authentication.getName();
         User citizen = userRepository.findByEmail(email);
         complaint.setUser(citizen);
+        
+     // ✅ Set single imageUrl from the list (for display in existing UI)
+        if (complaint.getImageUrls() != null && !complaint.getImageUrls().isEmpty()) {
+            complaint.setImageUrl(complaint.getImageUrls().get(0));
+        }
 
         String dept = complaint.getDepartment().name();
         User officer = userRepository.findFirstByRoleAndDepartment(Role.OFFICER, complaint.getDepartment());
