@@ -102,6 +102,7 @@ public class ChatbotController {
     // ──────────────────────────────────────────────
     @GetMapping("/suggest-department")
     public ResponseEntity<?> suggestDepartment(@RequestParam String text) {
+    	System.out.println("Received text: " + text);
         DepartmentRouter.CategorizationResult result = departmentRouter.categorize(text);
 
         Map<String, Object> response = new LinkedHashMap<>();
