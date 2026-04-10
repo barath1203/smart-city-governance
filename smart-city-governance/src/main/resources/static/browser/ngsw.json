@@ -1,0 +1,73 @@
+{
+  "configVersion": 1,
+  "timestamp": 1775810668777,
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app-shell",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/index.html",
+        "/main-N2FLJPZ2.js",
+        "/manifest.webmanifest",
+        "/polyfills-DOYHMSTV.js",
+        "/styles-AUUEAC3Q.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/assets/i18n/en.json",
+        "/assets/i18n/ta.json",
+        "/assets/logo.png",
+        "/assets/screenshots/admin .png",
+        "/assets/screenshots/citizen.png",
+        "/assets/screenshots/officer.png"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [],
+  "hashTable": {
+    "/assets/i18n/en.json": "eef8f352e66d204c1804327d26559fae23779e96",
+    "/assets/i18n/ta.json": "3d25189d5c08d7c4f578f3a13c213ef1c7d38ae3",
+    "/assets/logo.png": "166cb83b54c1f7be16c2c2b6f48c0c0c0beffb0f",
+    "/assets/screenshots/admin .png": "5291664001500dacd363c3882230d9301e6e52d9",
+    "/assets/screenshots/citizen.png": "9aafb8295940bc853dfccb1054453a15012ec198",
+    "/assets/screenshots/officer.png": "d67ddf27f21615df5399bf5dc4c9d4002e9be21a",
+    "/index.html": "3dd9e5e62042166c4831c5d3ef25dd78884f2248",
+    "/main-N2FLJPZ2.js": "57a3946fc467a0e0c170fb9839d5ff0719d42df9",
+    "/manifest.webmanifest": "6a85ec7a45a749fc1c7ee53590f06952d4a74939",
+    "/polyfills-DOYHMSTV.js": "319677ff7765c7c037e3df2d2078e2407d4b85d6",
+    "/styles-AUUEAC3Q.css": "4ae07d28f222bdaee2facf2770aa46b375de17f4"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/.*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}

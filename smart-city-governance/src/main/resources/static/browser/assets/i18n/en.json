@@ -1,0 +1,206 @@
+{
+   "createComplaint": {
+    "back": "← Back to Dashboard",
+    "brand": "Raise a Complaint",
+    "brandSub": "Help us make your city better by reporting issues directly to the right department.",
+    "step1Name": "Basic Info",
+    "step1Desc": "Title & Description",
+    "step2Name": "Category",
+    "step2Desc": "Department",
+    "step3Name": "Evidence",
+    "step3Desc": "Photo/Video & Location",
+    "progress": "Step {{current}} of 3",
+    "s1Title": "What's the issue?",
+    "s1Sub": "Give us a clear description of the problem",
+    "titleLabel": "Complaint Title",
+    "titlePlaceholder": "e.g. Broken streetlight on MG Road",
+    "descLabel": "Detailed Description",
+    "descPlaceholder": "Describe the issue in detail — where exactly, how severe, how long it's been happening...",
+    "nextCategory": "Next → Category",
+    "s2Title": "Category",
+    "s2Sub": "Help us route your complaint to the right team",
+    "deptLabel": "Department",
+    "nextEvidence": "Next → Evidence",
+    "back2": "← Back",
+    "s3Title": "Photo / Video & Location",
+    "s3Sub": "Add evidence and confirm your location",
+    "uploadLabel": "Upload Evidence (Optional)",
+    "imgTitle": "Image",
+    "imgFormat": "Format: JPG, PNG",
+    "imgSize": "Max size: 10 MB",
+    "imgMin": "Min: 640 × 480 px",
+    "vidTitle": "Video",
+    "vidFormat": "Format: MP4, MOV, 3GP",
+    "vidSize": "Max size: 200 MB",
+    "vidDuration": "Max duration: 30 sec",
+    "vidRes": "640×480 → 1920×1080",
+    "addMore": "Add more",
+    "slotsLeft": "left",
+    "clickUpload": "Click to upload photos or videos",
+    "upToFiles": "Up to {{max}} files · Images or Videos",
+    "locationLabel": "Location",
+    "submit": "Submit Complaint",
+    "submitting": "Submitting...",
+    "required": "Please fill in all required fields.",
+    "noLocation": "Location not captured. Please allow GPS access."
+  },
+  "dept": {
+    "WATER": "Water",
+    "ELECTRICITY": "Electricity",
+    "SANITATION": "Sanitation",
+    "ROAD": "Road"
+  },
+    "header": {
+    "title": "Smart City Portal",
+    "sub": "Citizen Dashboard",
+    "raise": "Raise Complaint",
+    "notifications": "Notifications",
+    "logout": "Logout"
+  },
+  "stats": {
+    "total": "Total",
+    "open": "Open",
+    "inProgress": "In Progress",
+    "resolved": "Resolved"
+  },
+  "complaints": {
+    "title": "My Complaints",
+    "empty": "No complaints raised yet",
+    "raiseFirst": "Raise your first complaint",
+    "department": "Department",
+    "created": "Created",
+    "location": "Location",
+    "deadline": "Deadline",
+    "escalated": "Escalated",
+    "unassigned": "Unassigned"
+  },
+  "status": {
+    "OPEN": "Open",
+    "IN_PROGRESS": "In Progress",
+    "RESOLVED": "Resolved",
+    "ESCALATED": "Escalated"
+  },
+  "priority": {
+    "LOW": "Low",
+    "MEDIUM": "Medium",
+    "HIGH": "High",
+    "EMERGENCY": "Emergency"
+  },
+  "rating": {
+    "title": "Rate this resolution",
+    "placeholder": "Optional feedback...",
+    "submit": "Submit Rating",
+    "success": "Rating submitted successfully!",
+    "error": "Please select a star rating.",
+    "rated": "You rated this"
+  },
+  "map": {
+    "label": "Complaint Location"
+  },
+  "lang": {
+    "toggle": "தமிழ்"
+  },
+  "notification": {
+  "back": "← Back to Dashboard",
+  "title": "Notifications",
+  "subtitle": "Stay updated on your complaint activity",
+  "loading": "Loading notifications...",
+  "error": "Failed to load notifications.",
+  "emptyTitle": "No notifications yet",
+  "emptySub": "You'll be notified when your complaint status changes"
+},
+"chatbot": {
+  "title": "CivicBot",
+  "sub": "Smart City Assistant",
+  "offline": "Offline — complaints will sync when connected",
+  "menu": {
+    "file": "📋 File a Complaint",
+    "track": "🔍 Track Complaint",
+    "faq": "❓ FAQ"
+  },
+  "input": {
+    "placeholder": "Type a message...",
+    "listening": "Listening...",
+    "back": "←",
+    "send": "➤"
+  },
+  "voice": {
+    "unsupported": "Voice input is not supported in your browser.",
+    "failed": "Voice input failed. Please type your message.",
+    "unclear": "I could not hear clearly. Please try again or type.",
+    "permissionDenied": "Microphone permission denied. Please allow mic access.",
+    "noSpeech": "No speech detected. Please try again.",
+    "network": "Network error. Check your connection.",
+    "aborted": "Voice input cancelled.",
+    "noMic": "No microphone found."
+  },
+  "register": {
+    "intro": "📋 Describe your complaint in detail.\nYou can type or use the 🎤 mic button to speak.\n\nExample: \"Water leakage near the school on main road\"",
+    "detecting": "📡 Detecting your location...",
+    "locationDetected": "📍 Location detected",
+    "locationConfirm": "Type YES to use it or NO to enter manually.",
+    "locationPermission": "Permission denied — please allow location in browser settings.",
+    "locationUnavailable": "Position unavailable — GPS signal not found.",
+    "locationTimeout": "Timed out — location took too long.",
+    "locationFallback": "📡 GPS unavailable. Trying network location...",
+    "locationManual": "📍 Please type your location:",
+    "locationLandmark": "📝 Add a landmark or street name (or press Enter to skip):",
+    "analyzed": "✅ I analyzed your complaint. Please confirm the details below.",
+    "sensitive": "🚨 Sensitive location detected",
+    "priorityUpgraded": "Priority upgraded.",
+    "conflict": "⚠️ Multiple departments detected. Please confirm the suggestion below.",
+    "confirm": "Type YES to submit or NO to cancel.",
+    "summary": "📋 Complaint summary:",
+    "summaryDescription": "• Description",
+    "summaryLocation": "• Location",
+    "summaryDepartment": "• Department",
+    "summaryPriority": "• Priority",
+    "summaryGps": "GPS verified ✓",
+    "submitSuccess": "✅ Complaint filed!",
+    "submitFailed": "❌ Submission failed. Please try again.",
+    "savedOffline": "📡 You're offline.\nYour complaint has been saved locally.\nIt will be submitted automatically when you're back online.",
+    "savedFallback": "⚠️ Submission failed. Saved locally.\nWill retry automatically when connection is restored.",
+    "cancelled": "❌ Cancelled. Returning to menu...",
+    "invalidPriority": "Please type: LOW, MEDIUM, HIGH, or EMERGENCY",
+    "priorityPrompt": "⚠️ What is the priority? Type: LOW, MEDIUM, HIGH, or EMERGENCY",
+    "yesNo": "Please type YES to submit or NO to cancel.",
+    "autoDetectFailed": "Could not auto-detect. Please type the location next.",
+    "editPriority": "No problem. What priority should this be? (LOW / MEDIUM / HIGH / EMERGENCY)"
+  },
+  "track": {
+    "intro": "🔍 Enter your complaint ID number (e.g. 101)",
+    "status": "Here is your complaint status:",
+    "notFound": "No complaint found with ID",
+    "failed": "Could not fetch status. Please try again.",
+    "invalidId": "Please enter a valid complaint ID.",
+    "another": "Would you like to track another complaint?"
+  },
+  "faq": {
+    "intro": "❓ Ask me anything about our services!",
+    "failed": "Sorry, I could not find an answer right now."
+  },
+  "suggestion": {
+    "department": "Department",
+    "priority": "Priority",
+    "confidence": "Confidence",
+    "sensitive": "Sensitive",
+    "conflict": "Multiple departments detected",
+    "confirm": "✅ Confirm",
+    "edit": "✏️ Edit"
+  },
+  "status": {
+    "label": "Status",
+    "priority": "Priority",
+    "department": "Department",
+    "officer": "Officer",
+    "escalated": "🚨 Escalated"
+  },
+  "sync": {
+    "back": "🌐 You're back online! Syncing",
+    "pending": "pending complaint(s)...",
+    "success": "complaint(s) submitted successfully!",
+    "failed": "complaint(s) failed to sync. Will retry when online."
+  },
+  "menu_greeting": "👋 Hi! I am CivicBot. How can I help you today?"
+}
+}
