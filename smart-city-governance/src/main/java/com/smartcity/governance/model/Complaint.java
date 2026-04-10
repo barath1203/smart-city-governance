@@ -52,6 +52,9 @@ public class Complaint {
 
 	@Enumerated(EnumType.STRING)
 	private Department department;
+	
+	@Column(name = "dh_rated", nullable = false)
+	private boolean dhRated = false;
 
 	private LocalDateTime createdAt;
 	private LocalDateTime deadline;
@@ -271,6 +274,13 @@ public class Complaint {
 
 	public void setResolutionImageUrl(String resolutionImageUrl) {
 		this.resolutionImageUrl = resolutionImageUrl;
+	}
+	public boolean isDhRated() {
+	    return dhRated;
+	}
+
+	public void setDhRated(boolean dhRated) {
+	    this.dhRated = dhRated;
 	}
 
 }

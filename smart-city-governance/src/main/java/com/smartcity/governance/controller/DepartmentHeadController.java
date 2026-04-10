@@ -2,6 +2,7 @@ package com.smartcity.governance.controller;
 
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -166,32 +167,40 @@ public class DepartmentHeadController {
             @RequestParam(required = false) String feedback,
             Authentication auth) {
 
+        // ✅ Input validation
         if (rating < 1 || rating > 5) {
             return ResponseEntity.badRequest().body("Rating must be 1 to 5");
         }
 
+        // ✅ Get DH and complaint
         User dh = userRepository.findByEmail(auth.getName());
-        Complaint complaint = complaintRepository.findById(id).orElseThrow();
+        Complaint complaint = complaintRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Complaint not found"));
 
+        // ✅ Authorization check
         if (!complaint.getDepartment().equals(dh.getDepartment())) {
             return ResponseEntity.status(403).body("Access denied");
         }
 
+        // ✅ Status check
         if (complaint.getStatus() != ComplaintStatus.RESOLVED) {
             return ResponseEntity.badRequest().body("Can only rate resolved complaints");
         }
 
-        // Prevent duplicate rating
+        // ✅ Prevent duplicate DH rating
         if (ratingRepository
-        	    .findByComplaintIdAndSource(id, RatingSource.DEPARTMENT_HEAD)
-        	    .isPresent()) {
-        	    return ResponseEntity.badRequest().body("Already rated");
-        	}
+                .findByComplaintIdAndSource(id, RatingSource.DEPARTMENT_HEAD)
+                .isPresent()) {
+            return ResponseEntity.badRequest().body("Already rated");
+        }
 
-        OfficerRating r = new OfficerRating();
+        // ✅ No officer assigned
         if (complaint.getAssignedOfficer() == null) {
             return ResponseEntity.badRequest().body("No officer assigned");
         }
+
+        // ✅ Create and save OfficerRating
+        OfficerRating r = new OfficerRating();
         r.setOfficer(complaint.getAssignedOfficer());
         r.setComplaint(complaint);
         r.setRating(rating);
@@ -199,8 +208,13 @@ public class DepartmentHeadController {
         r.setSource(RatingSource.DEPARTMENT_HEAD);
         ratingRepository.save(r);
 
+        // ✅ CRITICAL: Set DH rating flag for frontend filtering
+        complaint.setDhRated(true);
+        complaintRepository.save(complaint);
+
+        // ✅ Recalculate officer performance score
         performanceService.recalculateScore(complaint.getAssignedOfficer());
 
-        return ResponseEntity.ok("Rating submitted");
+        return ResponseEntity.ok(Map.of("message", "Rating submitted"));
     }
 }
