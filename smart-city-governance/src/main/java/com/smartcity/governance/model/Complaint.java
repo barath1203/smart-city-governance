@@ -32,12 +32,11 @@ public class Complaint {
 	private Double latitude;
 	private Double longitude;
 	private String imageUrl;
-	
+
 	@ElementCollection
 	@CollectionTable(name = "complaint_images", joinColumns = @JoinColumn(name = "complaint_id"))
 	@Column(name = "image_url")
 	private List<String> imageUrls = new ArrayList<>();
-
 
 	@Enumerated(EnumType.STRING)
 	private ComplaintPriority priority;
@@ -47,14 +46,12 @@ public class Complaint {
 
 	@ElementCollection(targetClass = Department.class)
 	@Enumerated(EnumType.STRING)
-	@CollectionTable(name = "complaint_departments",
-	        joinColumns = @JoinColumn(name = "complaint_id"))
+	@CollectionTable(name = "complaint_departments", joinColumns = @JoinColumn(name = "complaint_id"))
 	@Column(name = "department")
 	private List<Department> departments = new ArrayList<>();
 
 	@Enumerated(EnumType.STRING)
 	private Department department;
-
 
 	private LocalDateTime createdAt;
 	private LocalDateTime deadline;
@@ -74,6 +71,9 @@ public class Complaint {
 	@ManyToOne
 	@JoinColumn(name = "officer_id")
 	private User assignedOfficer;
+
+	@Column
+	private String resolutionImageUrl;
 
 	@PrePersist
 	public void prePersist() {
@@ -146,13 +146,13 @@ public class Complaint {
 	public void setImageUrl(String imageUrl) {
 		this.imageUrl = imageUrl;
 	}
-	
+
 	public List<String> getImageUrls() {
-	    return imageUrls;
+		return imageUrls;
 	}
 
 	public void setImageUrls(List<String> imageUrls) {
-	    this.imageUrls = imageUrls;
+		this.imageUrls = imageUrls;
 	}
 
 	public ComplaintPriority getPriority() {
@@ -172,11 +172,11 @@ public class Complaint {
 	}
 
 	public List<Department> getDepartments() {
-	    return departments;
+		return departments;
 	}
 
 	public void setDepartments(List<Department> departments) {
-	    this.departments = departments;
+		this.departments = departments;
 	}
 
 	public LocalDateTime getCreatedAt() {
@@ -262,6 +262,15 @@ public class Complaint {
 
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
+	}
+
+	// getter and setter
+	public String getResolutionImageUrl() {
+		return resolutionImageUrl;
+	}
+
+	public void setResolutionImageUrl(String resolutionImageUrl) {
+		this.resolutionImageUrl = resolutionImageUrl;
 	}
 
 }

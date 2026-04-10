@@ -92,6 +92,7 @@ public class OfficerController {
 	@PutMapping("/update-status/{id}")
 	public ResponseEntity<?> updateStatus(@PathVariable Long id,
 	                                       @RequestParam ComplaintStatus status,
+	                                       @RequestParam(required = false) String resolutionImageUrl,
 	                                       Authentication authentication) {
 
 	    Complaint complaint = complaintRepository.findById(id).orElse(null);
@@ -105,7 +106,6 @@ public class OfficerController {
 	    if (isPrimary) {
 
 	        if (status == ComplaintStatus.RESOLVED) {
-	            // ✅ Check all assisting officers have resolved their part
 	            List<CoordinationAssignment> assignments =
 	                coordinationAssignmentRepository.findByComplaintAndActiveTrue(complaint);
 
@@ -118,10 +118,15 @@ public class OfficerController {
 	                );
 	            }
 
-	            // ✅ All assists done — resolve
 	            complaint.setStatus(ComplaintStatus.RESOLVED);
 	            complaint.setEscalated(false);
 	            complaint.setResolvedAt(LocalDateTime.now());
+
+	            // ✅ Save resolution proof image
+	            if (resolutionImageUrl != null && !resolutionImageUrl.isEmpty()) {
+	                complaint.setResolutionImageUrl(resolutionImageUrl);
+	            }
+
 	            performanceService.recalculateScore(officer);
 
 	        } else {
@@ -130,7 +135,6 @@ public class OfficerController {
 
 	        complaintRepository.save(complaint);
 
-	        // ✅ Notify citizen
 	        Notification notification = new Notification();
 	        notification.setMessage("Your complaint '" + complaint.getTitle() +
 	                "' status has been updated to " + status);
@@ -144,7 +148,6 @@ public class OfficerController {
 	        );
 
 	    } else {
-	        // ✅ Assisting officer — update only their CoordinationAssignment status
 	        List<CoordinationAssignment> assignments =
 	            coordinationAssignmentRepository.findByOfficerAndActiveTrue(officer);
 
@@ -160,7 +163,6 @@ public class OfficerController {
 	        myAssignment.setAssistStatus(status);
 	        coordinationAssignmentRepository.save(myAssignment);
 
-	        // ✅ Notify primary officer
 	        Notification notification = new Notification();
 	        notification.setMessage("Assisting Officer " + officer.getName() +
 	            " marked their part as " + status +
@@ -177,7 +179,6 @@ public class OfficerController {
 
 	    return ResponseEntity.ok("Status updated successfully");
 	}
-
 	// 🔹 3. Filter by Status
 	@GetMapping("/complaints/status/{status}")
 	public List<Complaint> getByStatus(@PathVariable ComplaintStatus status, Authentication authentication) {
