@@ -120,34 +120,100 @@ public class ChatbotController {
     // ──────────────────────────────────────────────
     @GetMapping("/faq")
     public ResponseEntity<?> getFaq(@RequestParam String query) {
-        String lower = query.toLowerCase();
+        String lower = translateToEnglish(query.toLowerCase().trim());
+        System.out.println("FAQ query (translated): " + lower); // debug log
+        
         List<FaqEntry> all = faqRepository.findAll();
 
         FaqEntry best = all.stream()
-            .filter(f -> f.getKeywords().stream()
-                .filter(k -> lower.contains(k.toLowerCase()))
-                .count() >= 2)
-            .findFirst()
+            .map(f -> {
+                long hits = f.getKeywords().stream()
+                    .filter(k -> lower.contains(k.toLowerCase()))
+                    .count();
+                return Map.entry(f, hits);
+            })
+            .filter(e -> e.getValue() >= 1)
+            .max(Comparator.comparingLong(Map.Entry::getValue))
+            .map(Map.Entry::getKey)
             .orElse(null);
 
         if (best != null) {
             return ResponseEntity.ok(Map.of("answer", best.getAnswer()));
         }
 
-        FaqEntry fallback = all.stream()
-            .filter(f -> f.getKeywords().stream()
-                .anyMatch(k -> lower.contains(k.toLowerCase())))
-            .findFirst()
-            .orElse(null);
-
-        if (fallback != null) {
-            return ResponseEntity.ok(Map.of("answer", fallback.getAnswer()));
-        }
-
         return ResponseEntity.ok(Map.of(
             "answer",
-            "I couldn't find an answer. Please contact support or raise a complaint."
+            "I couldn't find an exact answer. Try asking about: " +
+            "complaint status, resolution time, departments, " +
+            "how to file a complaint, or escalation."
         ));
+    }
+
+    // ── Tamil Unicode → English keyword map ──────────────────────────────────────
+    private String translateToEnglish(String text) {
+        Map<String, String> tamilMap = new LinkedHashMap<>();
+
+        // Time / resolution
+        tamilMap.put("எவ்வளவு நேரம்",    "how long");
+        tamilMap.put("எவ்வளவு நேரத்தில்", "how long time");
+        tamilMap.put("எத்தனை நாள்",       "how many days");
+        tamilMap.put("எத்தனை நாட்கள்",    "days");
+        tamilMap.put("நேரம்",             "time");
+        tamilMap.put("நாள்",              "days");
+        tamilMap.put("தீர்க்கப்படும்",    "resolve resolved");
+        tamilMap.put("தீர்வு",            "resolve");
+        tamilMap.put("எப்போது",           "when");
+
+        // Filing
+        tamilMap.put("புகார் பதிவு",      "file complaint register");
+        tamilMap.put("புகார்",            "complaint");
+        tamilMap.put("பதிவு செய்",        "register file");
+        tamilMap.put("சமர்ப்பி",          "submit");
+        tamilMap.put("எப்படி",            "how");
+
+        // Tracking
+        tamilMap.put("நிலை",              "status track");
+        tamilMap.put("கண்காணி",           "track");
+        tamilMap.put("சரிபார்",           "check");
+
+        // Departments
+        tamilMap.put("துறை",              "department");
+        tamilMap.put("தண்ணீர்",           "water");
+        tamilMap.put("சாலை",              "road");
+        tamilMap.put("மின்சாரம்",         "electricity");
+        tamilMap.put("சுகாதாரம்",         "sanitation");
+
+        // Priority
+        tamilMap.put("முன்னுரிமை",        "priority");
+        tamilMap.put("அவசரம்",            "emergency urgent");
+
+        // Escalation
+        tamilMap.put("அதிகரிப்பு",        "escalation escalated");
+        tamilMap.put("மேல்முறையீடு",      "escalation");
+
+        // Officer
+        tamilMap.put("அதிகாரி",           "officer assigned");
+        tamilMap.put("யார்",              "who");
+
+        // Offline
+        tamilMap.put("இணையம் இல்லாமல்",  "offline without internet");
+        tamilMap.put("இணையம்",            "internet");
+        tamilMap.put("ஆஃப்லைன்",          "offline");
+
+        // Rating
+        tamilMap.put("மதிப்பீடு",         "rating rate");
+        tamilMap.put("நட்சத்திரம்",       "star");
+        tamilMap.put("கருத்து",           "feedback");
+
+        // Language
+        tamilMap.put("தமிழ்",             "tamil language");
+        tamilMap.put("குரல்",             "voice speak");
+
+        String result = text;
+        for (Map.Entry<String, String> entry : tamilMap.entrySet()) {
+            result = result.replace(entry.getKey(), entry.getValue());
+        }
+        return result;
     }
 
     // ──────────────────────────────────────────────
