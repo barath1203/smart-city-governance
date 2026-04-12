@@ -1,4 +1,5 @@
 package com.smartcity.governance.config;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,7 +40,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/officer/**").hasRole("OFFICER")
                 .requestMatchers("/api/complaints/create/**").hasRole("CITIZEN")
                 .requestMatchers("/api/complaints/user/**").hasRole("CITIZEN")
-                .requestMatchers("/api/complaints/officer-rating/**").hasAnyRole("OFFICER", "DEPARTMENT_HEAD") 
+                .requestMatchers("/api/complaints/my").hasRole("CITIZEN")          // ✔
+                .requestMatchers("/api/complaints/officer-rating/**").hasAnyRole("OFFICER", "DEPARTMENT_HEAD")
                 .requestMatchers("/api/complaints/update-status/**").hasAnyRole("OFFICER", "ADMIN")
                 .requestMatchers("/api/complaints/all").hasAnyRole("OFFICER", "ADMIN", "DEPARTMENT_HEAD")
                 .requestMatchers("/api/complaints/request-coordination/**").hasRole("OFFICER")
@@ -55,8 +57,8 @@ public class SecurityConfig {
             .httpBasic(basic -> basic.disable());
 
         http.addFilterBefore(
-                new JwtAuthFilter(jwtService),
-                UsernamePasswordAuthenticationFilter.class
+            new JwtAuthFilter(jwtService),
+            UsernamePasswordAuthenticationFilter.class
         );
 
         return http.build();
@@ -70,17 +72,17 @@ public class SecurityConfig {
         config.addAllowedOrigin("http://localhost:3000");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring()
+        return web -> web
+            .ignoring()
             .requestMatchers("/ws/**")
-            .requestMatchers("/uploads/**"); // ✅ Add this
+            .requestMatchers("/uploads/**");
     }
 
     @Bean

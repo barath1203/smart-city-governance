@@ -22,265 +22,161 @@ import jakarta.persistence.Table;
 @Table(name = "complaints")
 public class Complaint {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	private String title;
-	private String description;
-	private String location;
-	private Double latitude;
-	private Double longitude;
-	private String imageUrl;
+    private String title;
+    private String description;
+    private String location;
+    private Double latitude;
+    private Double longitude;
+    private String imageUrl;
 
-	@ElementCollection
-	@CollectionTable(name = "complaint_images", joinColumns = @JoinColumn(name = "complaint_id"))
-	@Column(name = "image_url")
-	private List<String> imageUrls = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "complaint_images", joinColumns = @JoinColumn(name = "complaint_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();
 
-	@Enumerated(EnumType.STRING)
-	private ComplaintPriority priority;
+    @Enumerated(EnumType.STRING)
+    private ComplaintPriority priority;
 
-	@Enumerated(EnumType.STRING)
-	private ComplaintStatus status;
+    @Enumerated(EnumType.STRING)
+    private ComplaintStatus status;
 
-	@ElementCollection(targetClass = Department.class)
-	@Enumerated(EnumType.STRING)
-	@CollectionTable(name = "complaint_departments", joinColumns = @JoinColumn(name = "complaint_id"))
-	@Column(name = "department")
-	private List<Department> departments = new ArrayList<>();
+    @ElementCollection(targetClass = Department.class)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "complaint_departments", joinColumns = @JoinColumn(name = "complaint_id"))
+    @Column(name = "department")
+    private List<Department> departments = new ArrayList<>();
 
-	@Enumerated(EnumType.STRING)
-	private Department department;
-	
-	@Column(name = "dh_rated", nullable = false)
-	private boolean dhRated = false;
+    @Enumerated(EnumType.STRING)
+    private Department department;
 
-	private LocalDateTime createdAt;
-	private LocalDateTime deadline;
-	@Column
-	private LocalDateTime resolvedAt;
-	private boolean escalated = false;
+    // ✅ FIXED: Boolean wrapper instead of primitive — handles NULL from DB
+    @Column(name = "dh_rated", nullable = false, columnDefinition = "boolean default false")
+    private Boolean dhRated = false;
 
-	// ✅ Rating fields
-	private Integer rating;
-	private String ratingComment;
-	private boolean rated = false;
+    private LocalDateTime createdAt;
+    private LocalDateTime deadline;
 
-	@ManyToOne
-	@JoinColumn(name = "citizen_id")
-	private User user;
+    @Column
+    private LocalDateTime resolvedAt;
 
-	@ManyToOne
-	@JoinColumn(name = "officer_id")
-	private User assignedOfficer;
+    // ✅ FIXED: Boolean wrapper instead of primitive — handles NULL from DB
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean escalated = false;
 
-	@Column
-	private String resolutionImageUrl;
+    // ✅ Rating fields
+    private Integer rating;
+    private String ratingComment;
 
-	@PrePersist
-	public void prePersist() {
-		this.createdAt = LocalDateTime.now();
-		this.status = ComplaintStatus.OPEN;
-		this.deadline = calculateDeadline(this.priority);
-	}
+    // ✅ FIXED: Boolean wrapper instead of primitive — handles NULL from DB
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean rated = false;
 
-	private LocalDateTime calculateDeadline(ComplaintPriority priority) {
-		if (priority == null) {
-			return LocalDateTime.now().plusDays(5);
-		}
-		return switch (priority) {
-		case LOW -> LocalDateTime.now().plusMinutes(1);
-		case MEDIUM -> LocalDateTime.now().plusMinutes(1);
-		case HIGH -> LocalDateTime.now().plusMinutes(1);
-		case EMERGENCY -> LocalDateTime.now().plusMinutes(1);
-		};
-	}
+    @ManyToOne
+    @JoinColumn(name = "citizen_id")
+    private User user;
 
-	// Getters and Setters
-	public Long getId() {
-		return id;
-	}
+    @ManyToOne
+    @JoinColumn(name = "officer_id")
+    private User assignedOfficer;
 
-	public String getTitle() {
-		return title;
-	}
+    @Column
+    private String resolutionImageUrl;
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+        this.status = ComplaintStatus.OPEN;
+        this.deadline = calculateDeadline(this.priority);
+        // ✅ Ensure boolean fields are never null on insert
+        if (this.dhRated == null) this.dhRated = false;
+        if (this.escalated == null) this.escalated = false;
+        if (this.rated == null) this.rated = false;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    private LocalDateTime calculateDeadline(ComplaintPriority priority) {
+        if (priority == null) {
+            return LocalDateTime.now().plusDays(7);
+        }
+        return switch (priority) {
+            case LOW       -> LocalDateTime.now().plusDays(7);   // 7 days  — routine issues
+            case MEDIUM    -> LocalDateTime.now().plusDays(3);   // 3 days  — moderate issues
+            case HIGH      -> LocalDateTime.now().plusHours(24); // 24 hours — urgent issues
+            case EMERGENCY -> LocalDateTime.now().plusHours(6);  // 6 hours  — critical issues
+        };
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-	public String getLocation() {
-		return location;
-	}
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-	public void setLocation(String location) {
-		this.location = location;
-	}
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-	public Double getLatitude() {
-		return latitude;
-	}
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-	public void setLatitude(Double latitude) {
-		this.latitude = latitude;
-	}
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
 
-	public Double getLongitude() {
-		return longitude;
-	}
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
 
-	public void setLongitude(Double longitude) {
-		this.longitude = longitude;
-	}
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-	public String getImageUrl() {
-		return imageUrl;
-	}
+    public List<String> getImageUrls() { return imageUrls; }
+    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
 
-	public void setImageUrl(String imageUrl) {
-		this.imageUrl = imageUrl;
-	}
+    public ComplaintPriority getPriority() { return priority; }
+    public void setPriority(ComplaintPriority priority) { this.priority = priority; }
 
-	public List<String> getImageUrls() {
-		return imageUrls;
-	}
+    public ComplaintStatus getStatus() { return status; }
+    public void setStatus(ComplaintStatus status) { this.status = status; }
 
-	public void setImageUrls(List<String> imageUrls) {
-		this.imageUrls = imageUrls;
-	}
+    public List<Department> getDepartments() { return departments; }
+    public void setDepartments(List<Department> departments) { this.departments = departments; }
 
-	public ComplaintPriority getPriority() {
-		return priority;
-	}
+    public Department getDepartment() { return department; }
+    public void setDepartment(Department department) { this.department = department; }
 
-	public void setPriority(ComplaintPriority priority) {
-		this.priority = priority;
-	}
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-	public ComplaintStatus getStatus() {
-		return status;
-	}
+    public LocalDateTime getDeadline() { return deadline; }
+    public void setDeadline(LocalDateTime deadline) { this.deadline = deadline; }
 
-	public void setStatus(ComplaintStatus status) {
-		this.status = status;
-	}
+    public LocalDateTime getResolvedAt() { return resolvedAt; }
+    public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
 
-	public List<Department> getDepartments() {
-		return departments;
-	}
+    // ✅ FIXED: Boolean wrapper getters/setters
+    public Boolean isDhRated() { return dhRated; }
+    public void setDhRated(Boolean dhRated) { this.dhRated = dhRated != null ? dhRated : false; }
 
-	public void setDepartments(List<Department> departments) {
-		this.departments = departments;
-	}
+    public Boolean isEscalated() { return escalated; }
+    public void setEscalated(Boolean escalated) { this.escalated = escalated != null ? escalated : false; }
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
+    public Boolean isRated() { return rated; }
+    public void setRated(Boolean rated) { this.rated = rated != null ? rated : false; }
 
-	public LocalDateTime getDeadline() {
-		return deadline;
-	}
+    public Integer getRating() { return rating; }
+    public void setRating(Integer rating) { this.rating = rating; }
 
-	public void setDeadline(LocalDateTime deadline) {
-		this.deadline = deadline;
-	}
+    public String getRatingComment() { return ratingComment; }
+    public void setRatingComment(String ratingComment) { this.ratingComment = ratingComment; }
 
-	public boolean isEscalated() {
-		return escalated;
-	}
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
-	public void setEscalated(boolean escalated) {
-		this.escalated = escalated;
-	}
+    public User getAssignedOfficer() { return assignedOfficer; }
+    public void setAssignedOfficer(User assignedOfficer) { this.assignedOfficer = assignedOfficer; }
 
-	public User getUser() {
-		return user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public User getAssignedOfficer() {
-		return assignedOfficer;
-	}
-
-	public void setAssignedOfficer(User assignedOfficer) {
-		this.assignedOfficer = assignedOfficer;
-	}
-
-	// ✅ Rating getters and setters
-	public Integer getRating() {
-		return rating;
-	}
-
-	public void setRating(Integer rating) {
-		this.rating = rating;
-	}
-
-	public String getRatingComment() {
-		return ratingComment;
-	}
-
-	public void setRatingComment(String ratingComment) {
-		this.ratingComment = ratingComment;
-	}
-
-	public boolean isRated() {
-		return rated;
-	}
-
-	public void setRated(boolean rated) {
-		this.rated = rated;
-	}
-
-	public LocalDateTime getResolvedAt() {
-		return resolvedAt;
-	}
-
-	public void setResolvedAt(LocalDateTime resolvedAt) {
-		this.resolvedAt = resolvedAt;
-	}
-
-	public Department getDepartment() {
-		return department;
-	}
-
-	public void setDepartment(Department department) {
-		this.department = department;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
-
-	// getter and setter
-	public String getResolutionImageUrl() {
-		return resolutionImageUrl;
-	}
-
-	public void setResolutionImageUrl(String resolutionImageUrl) {
-		this.resolutionImageUrl = resolutionImageUrl;
-	}
-	public boolean isDhRated() {
-	    return dhRated;
-	}
-
-	public void setDhRated(boolean dhRated) {
-	    this.dhRated = dhRated;
-	}
-
+    public String getResolutionImageUrl() { return resolutionImageUrl; }
+    public void setResolutionImageUrl(String resolutionImageUrl) { this.resolutionImageUrl = resolutionImageUrl; }
 }
