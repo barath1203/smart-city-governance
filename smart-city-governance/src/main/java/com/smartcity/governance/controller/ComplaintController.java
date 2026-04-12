@@ -2,6 +2,7 @@ package com.smartcity.governance.controller;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -242,34 +243,43 @@ public class ComplaintController {
     }
     // ✅ Get average rating for an officer
     @GetMapping("/officer-rating/{officerId}")
-    public ResponseEntity<Map<String, Object>> getOfficerRating(
-            @PathVariable Long officerId) {
-
+    public ResponseEntity<?> getOfficerRating(@PathVariable Long officerId) {
         User officer = userRepository.findById(officerId).orElse(null);
-        if (officer == null) {
-			return ResponseEntity.notFound().build();
-		}
+        if (officer == null) return ResponseEntity.notFound().build();
 
-        List<OfficerRating> citizenRatings = ratingRepository
-            .findByOfficerAndSource(officer, RatingSource.CITIZEN);
-        List<OfficerRating> dhRatings = ratingRepository
-            .findByOfficerAndSource(officer, RatingSource.DEPARTMENT_HEAD);
+        List<Complaint> assigned = complaintRepository.findByAssignedOfficer(officer);
+        int total    = assigned.size();
+        int resolved = (int) assigned.stream()
+            .filter(c -> c.getStatus() == ComplaintStatus.RESOLVED).count();
+        int escalated = (int) assigned.stream()
+            .filter(c -> c.isEscalated()).count();
+        long onTimeResolved = assigned.stream()
+            .filter(c -> c.getStatus() == ComplaintStatus.RESOLVED
+                      && c.getResolvedAt() != null
+                      && c.getDeadline()   != null
+                      && c.getResolvedAt().isBefore(c.getDeadline()))
+            .count();
 
-        double citizenAvg = citizenRatings.stream()
-            .mapToInt(OfficerRating::getRating).average().orElse(0.0);
-        double dhAvg = dhRatings.stream()
-            .mapToInt(OfficerRating::getRating).average().orElse(0.0);
+        List<OfficerRating> dhRatings      = ratingRepository.findByOfficerAndSource(officer, RatingSource.DEPARTMENT_HEAD);
+        List<OfficerRating> citizenRatings = ratingRepository.findByOfficerAndSource(officer, RatingSource.CITIZEN);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("officerId",        officerId);
-        result.put("officerName",      officer.getName());
-        result.put("performanceScore", officer.getPerformanceScore());
-        result.put("citizenRatings",   citizenRatings.size());
-        result.put("citizenAvg",       Math.round(citizenAvg * 10.0) / 10.0);
-        result.put("dhRatings",        dhRatings.size());
-        result.put("dhAvg",            Math.round(dhAvg * 10.0) / 10.0);
+        double dhAvg      = dhRatings.stream().mapToInt(OfficerRating::getRating).average().orElse(0.0);
+        double citizenAvg = citizenRatings.stream().mapToInt(OfficerRating::getRating).average().orElse(0.0);
 
-        return ResponseEntity.ok(result);
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("officerId",       officer.getId());
+        res.put("officerName",     officer.getName());
+        res.put("performanceScore",officer.getPerformanceScore());
+        res.put("total",           total);           // ← NEW
+        res.put("resolved",        resolved);        // ← NEW
+        res.put("escalated",       escalated);       // ← NEW
+        res.put("onTimeResolved",  onTimeResolved);  // ← NEW
+        res.put("citizenAvg",      citizenAvg);
+        res.put("citizenRatings",  citizenRatings.size());
+        res.put("dhAvg",           dhAvg);
+        res.put("dhRatings",       dhRatings.size());
+
+        return ResponseEntity.ok(res);
     }
 
     @PostMapping("/request-coordination/{complaintId}")

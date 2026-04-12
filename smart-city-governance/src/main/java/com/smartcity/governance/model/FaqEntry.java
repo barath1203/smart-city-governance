@@ -24,8 +24,17 @@ public class FaqEntry {
     )
     @Column(name = "keyword")
     private List<String> keywords;
+    
+    @Column(name = "answer_ta", columnDefinition = "TEXT")
+    private String answerTa;
 
-    public Long getId()                      { return id; }
+    public String getAnswerTa() {
+		return answerTa;
+	}
+	public void setAnswerTa(String answerTa) {
+		this.answerTa = answerTa;
+	}
+	public Long getId()                      { return id; }
     public void setId(Long id)               { this.id = id; }
 
     public String getQuestion()              { return question; }        // ← ADD
