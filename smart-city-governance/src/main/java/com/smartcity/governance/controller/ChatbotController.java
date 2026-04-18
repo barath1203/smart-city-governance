@@ -268,7 +268,10 @@ public class ChatbotController {
 		}
 
 		// ✅ Auto-assign officer
-		User officer = userRepository.findFirstByRoleAndDepartment(Role.OFFICER, deptEnum);
+		List<User> officers = userRepository.findOfficersByDepartmentOrderByLoad(
+			    Role.OFFICER, complaint.getDepartment()
+			);
+			User officer = officers.isEmpty() ? null : officers.get(0);
 
 		complaint.getDepartments().add(deptEnum);
 

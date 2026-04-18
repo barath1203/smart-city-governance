@@ -70,7 +70,10 @@ public class ComplaintController {
         }
 
         String dept = complaint.getDepartment().name();
-        User officer = userRepository.findFirstByRoleAndDepartment(Role.OFFICER, complaint.getDepartment());
+        List<User> officers = userRepository.findOfficersByDepartmentOrderByLoad(
+        	    Role.OFFICER, complaint.getDepartment()
+        	);
+        	User officer = officers.isEmpty() ? null : officers.get(0);
         complaint.getDepartments().add(complaint.getDepartment());
 
         if (officer != null) {
