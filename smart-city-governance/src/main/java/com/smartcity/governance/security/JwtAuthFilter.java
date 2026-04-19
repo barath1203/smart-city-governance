@@ -27,9 +27,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
+        System.out.println(">>> JwtAuthFilter triggered for: " + request.getMethod() + " " + request.getRequestURI());
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println(">>> No Bearer token found — skipping auth");
             filterChain.doFilter(request, response);
             return;
         }
@@ -40,12 +43,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String email = jwtService.extractEmail(token);
             String role  = jwtService.extractRole(token);
 
-            if (email != null
-            	    && jwtService.isTokenValid(token)
-            	    && SecurityContextHolder.getContext().getAuthentication() == null)  {
+            System.out.println(">>> email from token:  [" + email + "]");
+            System.out.println(">>> role from token:   [" + role + "]");
+            System.out.println(">>> token valid:       [" + jwtService.isTokenValid(token) + "]");
+            System.out.println(">>> auth already set:  [" + (SecurityContextHolder.getContext().getAuthentication() != null) + "]");
 
-                // ✅ CRITICAL — Spring Security needs ROLE_ prefix
+            if (email != null
+                    && jwtService.isTokenValid(token)
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                if (role == null) {
+                    System.out.println(">>> WARNING: role is null — cannot set authentication");
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 String springRole = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                System.out.println(">>> springRole set:    [" + springRole + "]");
 
                 UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
@@ -55,10 +69,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                System.out.println(">>> Authentication set successfully for: " + email);
+
+            } else {
+                System.out.println(">>> Auth NOT set — reason:");
+                System.out.println("    email null?          " + (email == null));
+                System.out.println("    token valid?         " + jwtService.isTokenValid(token));
+                System.out.println("    auth already exists? " + (SecurityContextHolder.getContext().getAuthentication() != null));
             }
 
         } catch (Exception e) {
-            System.out.println("JWT Error: " + e.getMessage());
+            System.out.println(">>> JWT Exception: " + e.getClass().getSimpleName() + " — " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
